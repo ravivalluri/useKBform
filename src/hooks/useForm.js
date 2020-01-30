@@ -1,32 +1,40 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 
-function isValidForm(email) {
+// validates email ,returns bool
+function isValidEmail(email) {
   let regex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return regex.test(String(email).toLowerCase());
 }
 
+//returs array of items with required attribute
 Array.prototype.hasRequiredAttr = function() {
   return this.filter(x => x.attributes.hasOwnProperty('_required'));
 };
 
+//returns array of items with email attribute
 Array.prototype.hasEmailAttr = function() {
   return this.filter(x => x.attributes.hasOwnProperty('_email'));
 };
 
+//returns global form valid bool
 Array.prototype.isValidForm = function() {
-  return this.hasRequiredAttr().every(item => item.value !== '');
+  return this.hasRequiredAttr().every(x => x.value !== '');
 };
 
+//validate form
 Array.prototype.hasValidated = function() {
   const errors = {};
-  this.hasRequiredAttr().map(({ name, value }) => {
-    if (value === '') errors[name] = true;
+  const emailErrors = {};
+
+  this.hasRequiredAttr().forEach(({ name, value }) => {
+    if (value === '') errors[name] = 'this field is required';
   });
-  // .hasRequiredAttr()
-  // .map(({ name, value }) => {
-  //   if (value === '') errors[name] = true;
-  // });
-  return errors;
+
+  this.hasEmailAttr().forEach(({ name, value }) => {
+    if (!isValidEmail(value)) emailErrors[name] = 'email is not valid';
+  });
+
+  return { errors, emailErrors };
 };
 
 export default function useForm() {
@@ -42,9 +50,9 @@ export default function useForm() {
     // console.log(current.hasEmailAttr().filter(x => isValidForm(x.value)));
   }, []);
 
-  useEffect(() => {
-    // console.log(current);
-  }, []);
+  // useEffect(() => {
+  //   console.log(errorState);
+  // }, [errorState]);
 
   const _onBlur = useCallback(() => {
     const isValid = current.isValidForm();
@@ -52,8 +60,9 @@ export default function useForm() {
   }, []);
 
   const handleErrors = useCallback(() => {
-    const errors = current.hasValidated();
-    setErrorState(errors);
+    const { errors, emailErrors } = current.hasValidated();
+    setErrorState({ errors, emailErrors });
+    // console.log(errors, emailErrors);
   }, []);
 
   const handleForm = useCallback(() => {
@@ -69,8 +78,8 @@ export default function useForm() {
   const _handleSubmit = useCallback(
     e => {
       e.preventDefault();
-      handleForm();
       handleErrors();
+      handleForm();
     },
     [handleForm, handleErrors]
   );

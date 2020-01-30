@@ -7,8 +7,14 @@ export default function SomeComponent() {
   const { _handleSubmit, _register, _onBlur, formState, errorState } = useForm();
 
   useEffect(() => {
-    console.log(formState);
+    if (formState !== undefined) {
+      console.log(formState);
+    }
   }, [formState]);
+
+  useEffect(() => {
+    console.log(errorState);
+  }, [errorState]);
 
   return (
     <div>
@@ -22,7 +28,7 @@ export default function SomeComponent() {
           name="name"
           // defaultValue={formState.value.field.text}
         />
-        {errorState.name && 'email is required'}
+        {errorState.errors?.name || errorState.emailErrors?.name}
         <input
           type="text"
           ref={_register}
