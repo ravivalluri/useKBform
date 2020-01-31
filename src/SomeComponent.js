@@ -12,40 +12,46 @@ export default function SomeComponent() {
     }
   }, [formState]);
 
-  useEffect(() => {
-    console.log(errorState);
-  }, [errorState]);
+  // useEffect(() => {
+  //   console.log(errorState);
+  // }, [errorState]);
 
   return (
     <div>
       <form onSubmit={_handleSubmit}>
         <input
-          type="text"
           ref={_register}
           onBlur={_onBlur}
           _required="true"
-          _email="true"
+          // _email="true"
+          _pin="true"
           name="name"
           // defaultValue={formState.value.field.text}
         />
-        {errorState.errors?.name || errorState.emailErrors?.name}
+        {errorState.emptyFieldValidationErrors?.name ||
+          errorState.emailValidationErrors?.name ||
+          errorState.numberValidationErrors?.name ||
+          errorState.pinValidationErrors?.name}
         <input
-          type="text"
           ref={_register}
           onBlur={_onBlur}
           name="surname"
+          // _number="true"
           // defaultValue={formState.value.field.text}
         />
-        {errorState.surname && 'surname is required'}
+        {errorState.emptyFieldValidationErrors?.surname ||
+          errorState.emailValidationErrors?.surname ||
+          errorState.numberValidationErrors?.surname}
         <input
-          type="text"
           ref={_register}
           onBlur={_onBlur}
           name="lastname"
           // _isrequired="true"
           // defaultValue={formState.value.field.text}
         />
-        {errorState.lastname && 'lastname is required'}
+        {errorState.emptyFieldValidationErrors?.lastname ||
+          errorState.emailValidationErrors?.lastname ||
+          errorState.numberValidationErrors?.lastname}
         <button type="submit">submit</button>
       </form>
     </div>
