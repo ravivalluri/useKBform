@@ -23,25 +23,27 @@ export default function SomeComponent() {
           ref={_register}
           onBlur={_onBlur}
           _required="true"
+          // _number="true"
+          _minlength="3"
+          _maxlength="5"
+          // _length="6"
           // _email="true"
-          _pin="true"
+          // _amount="true"
+          // _pan="true"
+          // _pin="true"
           name="name"
           // defaultValue={formState.value.field.text}
         />
-        {errorState.emptyFieldValidationErrors?.name ||
-          errorState.emailValidationErrors?.name ||
-          errorState.numberValidationErrors?.name ||
-          errorState.pinValidationErrors?.name}
+        {errorState.name}
         <input
           ref={_register}
           onBlur={_onBlur}
           name="surname"
+          // _required="true"
           // _number="true"
           // defaultValue={formState.value.field.text}
         />
-        {errorState.emptyFieldValidationErrors?.surname ||
-          errorState.emailValidationErrors?.surname ||
-          errorState.numberValidationErrors?.surname}
+        {errorState.surname}
         <input
           ref={_register}
           onBlur={_onBlur}
@@ -49,9 +51,7 @@ export default function SomeComponent() {
           // _isrequired="true"
           // defaultValue={formState.value.field.text}
         />
-        {errorState.emptyFieldValidationErrors?.lastname ||
-          errorState.emailValidationErrors?.lastname ||
-          errorState.numberValidationErrors?.lastname}
+        {errorState.lastname}
         <button type="submit">submit</button>
       </form>
     </div>
