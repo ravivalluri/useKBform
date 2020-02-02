@@ -65,112 +65,175 @@ const utils = Object.create(Utils.prototype);
 
 /* Utils ends*/
 
-/* returns array of inputs with given attribute */
-Array.prototype.hasAttribute = function(attr) {
-  return this.filter(x => x.attributes.hasOwnProperty(attr));
-};
-
 /* returns true if each object in array is empty */
 Array.prototype.hasEmptyProperties = function() {
   return this.every(item => Object.getOwnPropertyNames(item).length === 0);
 };
 
-/* validate form */
-Array.prototype.hasValidated = function() {
+/* core validate ctor function */
+function Validate(array) {
+  this.array = array;
+}
+
+/* returns array of inputs with given attribute */
+Validate.prototype.hasAttribute = function(attr) {
+  return this.array.filter(x => x.attributes.hasOwnProperty(attr));
+};
+
+/* method for validating form */
+Validate.prototype.hasValidated = function() {
   const errors = {};
 
   this.hasAttribute('_required').forEach(({ name, value }) => {
     if (utils.isEmpty(value)) {
-      delete errors[name];
+      errors[name] = {};
       errors[name] = 'this field is required';
     }
   });
 
   this.hasAttribute('_email').forEach(({ name, value }) => {
     if (!utils.isValidEmail(value)) {
-      delete errors[name];
+      errors[name] = {};
       errors[name] = 'this email is not valid';
     }
   });
 
   this.hasAttribute('_number').forEach(({ name, value }) => {
     if (utils.isNumber(value)) {
-      delete errors[name];
+      errors[name] = {};
       errors[name] = 'this value is not number';
+    }
+  });
+
+  this.hasAttribute('_min').forEach(({ name, value, attributes }) => {
+    if (value < parseInt(attributes._min.value)) {
+      errors[name] = {};
+      errors[name] = `min ${attributes._min.value} required`;
+    }
+  });
+
+  this.hasAttribute('_max').forEach(({ name, value, attributes }) => {
+    if (value > parseInt(attributes._max.value)) {
+      errors[name] = {};
+      errors[name] = `max ${attributes._max.value} allowed`;
     }
   });
 
   this.hasAttribute('_minlength').forEach(({ name, value, attributes }) => {
     if (value.length < parseInt(attributes._minlength.value)) {
-      delete errors[name];
+      errors[name] = {};
       errors[name] = `min length ${attributes._minlength.value} required`;
     }
   });
 
   this.hasAttribute('_maxlength').forEach(({ name, value, attributes }) => {
     if (value.length > parseInt(attributes._maxlength.value)) {
-      delete errors[name];
+      errors[name] = {};
       errors[name] = `max length ${attributes._maxlength.value} allowed`;
     }
   });
 
   this.hasAttribute('_length').forEach(({ name, value, attributes }) => {
     if (value.length !== parseInt(attributes._length.value)) {
-      delete errors[name];
+      errors[name] = {};
       errors[name] = `required length is ${attributes._length.value} `;
     }
   });
 
   this.hasAttribute('_pin').forEach(({ name, value }) => {
     if (!utils.isValidPin(value)) {
-      delete errors[name];
+      errors[name] = {};
       errors[name] = 'this pin is not valid';
     }
   });
 
   this.hasAttribute('_amount').forEach(({ name, value }) => {
     if (!utils.isValidAmount(value)) {
-      delete errors[name];
+      errors[name] = {};
       errors[name] = 'this amount is not valid';
     }
   });
 
   this.hasAttribute('_pan').forEach(({ name, value }) => {
     if (!utils.isValidPan(value)) {
-      delete errors[name];
+      errors[name] = {};
       errors[name] = 'this pan is not valid';
     }
   });
+
+  /* TODO refactor */
+  const arr = [...this.hasAttribute('_password'), ...this.hasAttribute('_passwordrepeat')];
+
+  if (arr.length !== 0) {
+    let password;
+    let passwordRepeat;
+    let sname;
+
+    this.hasAttribute('_password').forEach(({ value }) => {
+      password = value;
+    });
+
+    this.hasAttribute('_passwordrepeat').forEach(({ name, value }) => {
+      passwordRepeat = value;
+      sname = name;
+    });
+
+    if (password !== passwordRepeat) {
+      errors[sname] = {};
+      errors[sname] = 'passwords does not match';
+    }
+  }
 
   return errors;
 };
 
 export default function useForm() {
+  /* validated form state for client */
   const [formState, setFormState] = useState();
+
+  /* errors state for client */
   const [errorState, setErrorState] = useState({});
+
+  /* global form validation boolean */
   const [isFormValid, setFormValid] = useState(false);
+
+  /* watch mode state */
+  const [watchState, setWatchState] = useState();
+
   const { current } = useRef([]);
 
-  const _register = useCallback(ref => current.push(ref), []);
+  const validate = new Validate(current);
 
-  useEffect(() => {
-    console.log(errorState);
-  }, [errorState]);
+  // useEffect(() => {
+  //   console.log(watchState);
+  // }, [watchState]);
 
-  useEffect(() => {
-    // console.log(current.hasAttribute('_min'));
-    // console.log();
-  }, [current]);
-
-  //TODO insert _onblur function to every refs onblur event
-  const _onBlur = useCallback(() => {
-    const errors = current.hasValidated();
+  const onBlur = useCallback(() => {
+    const errors = validate.hasValidated();
     const isErrorsEmpty = Object.keys(errors)
       .map(key => errors[key])
       .hasEmptyProperties();
 
+    watchMode();
     setErrorState(errors);
     setFormValid(isErrorsEmpty);
+  }, []);
+
+  const _register = useCallback(
+    ref => {
+      current.push(ref);
+      ref.onblur = onBlur;
+    },
+    [onBlur]
+  );
+
+  /* you can use watch mode to track form state changes while developing */
+  const watchMode = useCallback(() => {
+    const form = [];
+    current.forEach(({ value, name }) => {
+      form.push({ value, name });
+      setWatchState(form);
+    });
   }, []);
 
   const _handleSubmit = useCallback(
@@ -187,5 +250,5 @@ export default function useForm() {
     [isFormValid]
   );
 
-  return { _handleSubmit, _register, _onBlur, formState, errorState };
+  return { _handleSubmit, _register, watchState, formState, errorState };
 }
