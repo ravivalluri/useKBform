@@ -7,6 +7,7 @@ export default function SomeComponent() {
   const { _handleSubmit, _register, watchState, formState, errorState } = useForm();
 
   useEffect(() => {
+    /* temp condition */
     if (formState !== undefined) {
       console.log(formState);
     }
@@ -21,7 +22,7 @@ export default function SomeComponent() {
       <form onSubmit={_handleSubmit}>
         <input
           ref={_register}
-          name="password"
+          name="name"
           _required="true"
           // _password="true"
           // _number="true"
@@ -34,23 +35,23 @@ export default function SomeComponent() {
           // _amount="true"
           // _pan="true"
           // _pin="true"
-          defaultValue={'this is a default value'}
+          _defaultvalue={'default 1'}
         />
-        {errorState.password}
+        {errorState.name}
         <input
           ref={_register}
-          name="password_repeat"
+          name="surname"
           // _passwordrepeat="true"
           // _required="true"
           // _number="true"
-          // defaultValue={formState.value.field.text}
+          // defaultValue={'default 2'}
         />
-        {errorState.password_repeat}
+        {errorState.surname}
         <input
           ref={_register}
           name="lastname"
           // _required="true"
-          // defaultValue={formState.value.field.text}
+          // defaultValue={'default 3'}
         />
         {errorState.lastname}
         <button type="submit">submit</button>

@@ -4,6 +4,7 @@ import { useRef, useCallback, useEffect, useState } from 'react';
 
 function Utils() {}
 
+/* TODO  suspicious validation */
 /* method to check that provided value is number */
 Utils.prototype.isNumber = function(num) {
   return isNaN(num);
@@ -12,7 +13,7 @@ Utils.prototype.isNumber = function(num) {
 /* method to check email validity */
 Utils.prototype.isValidEmail = function(email) {
   let regex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  return regex.test(String(email).toLowerCase());
+  return regex.test(String(email));
 };
 
 /* method to check that provided value is not empty */
@@ -38,7 +39,16 @@ Utils.prototype.isValidAmount = function(amount) {
 };
 
 /* method to check phone validity */
-Utils.prototype.isValidPhone = function(phone) {};
+Utils.prototype.isValidPhone = function(phone) {
+  let regex = /^^((\+994)|0)((12[3-5]\d{6})|(((40)|(5[015])|(7[07]))[1-9]\d{6}))$/;
+  return regex.test(String(phone));
+};
+
+/* method to check password strength */
+Utils.prototype.isStrongPassword = function(password) {
+  let regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/;
+  return regex.test(String(password));
+};
 
 /* method to check PAN validity ,Luhn algorithm */
 Utils.prototype.isValidPan = function(pan) {
@@ -83,6 +93,11 @@ Validate.prototype.hasAttribute = function(attr) {
 /* method for validating form */
 Validate.prototype.hasValidated = function() {
   const errors = {};
+
+  this.hasAttribute('_defaultvalue').forEach(({ name, value, attributes }) => {
+    console.log(attributes._defaultvalue.value);
+    value = attributes._defaultvalue.value;
+  });
 
   this.hasAttribute('_required').forEach(({ name, value }) => {
     if (utils.isEmpty(value)) {
@@ -161,6 +176,13 @@ Validate.prototype.hasValidated = function() {
     }
   });
 
+  this.hasAttribute('_phone').forEach(({ name, value }) => {
+    if (!utils.isValidPhone(value)) {
+      errors[name] = {};
+      errors[name] = 'this phone number is not valid';
+    }
+  });
+
   /* TODO refactor */
   const arr = [...this.hasAttribute('_password'), ...this.hasAttribute('_passwordrepeat')];
 
@@ -169,8 +191,11 @@ Validate.prototype.hasValidated = function() {
     let passwordRepeat;
     let sname;
 
-    this.hasAttribute('_password').forEach(({ value }) => {
-      password = value;
+    this.hasAttribute('_password').forEach(({ value, name }) => {
+      if (!utils.isStrongPassword(value)) {
+        errors[name] = {};
+        errors[name] = 'passwords is not strong';
+      } else password = value;
     });
 
     this.hasAttribute('_passwordrepeat').forEach(({ name, value }) => {
@@ -200,25 +225,46 @@ export default function useForm() {
   /* watch mode state */
   const [watchState, setWatchState] = useState();
 
+  /* init refs array */
   const { current } = useRef([]);
 
   const validate = new Validate(current);
 
-  // useEffect(() => {
-  //   console.log(watchState);
-  // }, [watchState]);
+  useEffect(() => {
+    console.log(errorState);
+  }, [errorState]);
 
-  const onBlur = useCallback(() => {
+  // useEffect(() => {
+  //   console.log(current);
+  // }, []);
+
+  const errorHandlingUtil = useCallback(() => {
     const errors = validate.hasValidated();
     const isErrorsEmpty = Object.keys(errors)
       .map(key => errors[key])
       .hasEmptyProperties();
 
-    watchMode();
     setErrorState(errors);
     setFormValid(isErrorsEmpty);
-  }, []);
+  }, [setErrorState, setFormValid]);
 
+  const handleDefaultValue = useCallback(() => {
+    current.forEach(({ defaultValue, name, value }) => {
+      if (defaultValue) {
+        errorHandlingUtil();
+        // console.log(value);
+      }
+    });
+  }, [errorHandlingUtil]);
+
+  // useEffect(() => handleDefaultValue(), [handleDefaultValue]);
+
+  const onBlur = useCallback(() => {
+    errorHandlingUtil();
+    watchMode();
+  }, [errorHandlingUtil]);
+
+  /* push registered inputs to refs array */
   const _register = useCallback(
     ref => {
       current.push(ref);
@@ -227,27 +273,21 @@ export default function useForm() {
     [onBlur]
   );
 
-  /* you can use watch mode to track form state changes while developing */
-  const watchMode = useCallback(() => {
+  const createFormArr = useCallback(arr => {
     const form = [];
-    current.forEach(({ value, name }) => {
-      form.push({ value, name });
-      setWatchState(form);
-    });
+    arr.forEach(({ value, name }) => form.push({ value, name }));
+    return form;
   }, []);
+
+  /* you can use watch mode to track form state changes while debugging */
+  const watchMode = useCallback(() => setWatchState(createFormArr(current)), [createFormArr]);
 
   const _handleSubmit = useCallback(
     e => {
       e.preventDefault();
-      const form = [];
-      current.forEach(({ value, name }) => {
-        if (isFormValid) {
-          form.push({ value, name });
-          setFormState(form);
-        }
-      });
+      if (isFormValid) setFormState(createFormArr(current));
     },
-    [isFormValid]
+    [isFormValid, createFormArr]
   );
 
   return { _handleSubmit, _register, watchState, formState, errorState };
