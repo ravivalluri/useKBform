@@ -4,10 +4,10 @@ import { useRef, useCallback, useEffect, useState } from 'react';
 
 function Utils() {}
 
-/* TODO  suspicious validation */
 /* method to check that provided value is number */
 Utils.prototype.isNumber = function(num) {
-  return isNaN(num);
+  let regex = /^\d+$/;
+  return regex.test(String(num));
 };
 
 /* method to check email validity */
@@ -94,11 +94,6 @@ Validate.prototype.hasAttribute = function(attr) {
 Validate.prototype.hasValidated = function() {
   const errors = {};
 
-  this.hasAttribute('_defaultvalue').forEach(({ name, value, attributes }) => {
-    console.log(attributes._defaultvalue.value);
-    value = attributes._defaultvalue.value;
-  });
-
   this.hasAttribute('_required').forEach(({ name, value }) => {
     if (utils.isEmpty(value)) {
       errors[name] = {};
@@ -114,7 +109,7 @@ Validate.prototype.hasValidated = function() {
   });
 
   this.hasAttribute('_number').forEach(({ name, value }) => {
-    if (utils.isNumber(value)) {
+    if (!utils.isNumber(value)) {
       errors[name] = {};
       errors[name] = 'this value is not number';
     }
@@ -252,12 +247,12 @@ export default function useForm() {
     current.forEach(({ defaultValue, name, value }) => {
       if (defaultValue) {
         errorHandlingUtil();
-        // console.log(value);
+        console.log(value, name);
       }
     });
   }, [errorHandlingUtil]);
 
-  // useEffect(() => handleDefaultValue(), [handleDefaultValue]);
+  useEffect(() => handleDefaultValue(), [handleDefaultValue]);
 
   const onBlur = useCallback(() => {
     errorHandlingUtil();
