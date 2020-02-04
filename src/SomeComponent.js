@@ -23,7 +23,7 @@ export default function SomeComponent() {
         <input
           ref={_register}
           name="name"
-          _required="true"
+          // _required="true"
           // _password="true"
           // _number="true"
           // _min="5"
@@ -42,16 +42,16 @@ export default function SomeComponent() {
           ref={_register}
           name="surname"
           // _passwordrepeat="true"
-          // _required="true"
+          _required="true"
           _number="true"
-          defaultValue={'2'}
+          // defaultValue={'default 2'}
         />
         {errorState.surname}
         <input
           ref={_register}
           name="lastname"
           // _required="true"
-          defaultValue={'default 3'}
+          // defaultValue={'default 3'}
         />
         {errorState.lastname}
         <button type="submit">submit</button>
