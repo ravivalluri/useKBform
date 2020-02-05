@@ -23,10 +23,10 @@ export default function SomeComponent() {
         <input
           ref={_register}
           name="name"
-          _required="true"
+          // _required="true"
           _number="true"
-          _min="5"
-          _max="10"
+          // _min="5"
+          // _max="10"
           // _password="true"
           // _minlength="3"
           // _maxlength="5"
@@ -42,7 +42,7 @@ export default function SomeComponent() {
           errorState.minNumErrors?.name ||
           errorState.maxNumErrors?.name ||
           errorState.emailErrors?.name}
-        <input
+        {/* <input
           ref={_register}
           name="surname"
           _required="true"
@@ -85,7 +85,7 @@ export default function SomeComponent() {
           errorState.numErrors?.lastname ||
           errorState.minNumErrors?.lastname ||
           errorState.maxNumErrors?.lastname ||
-          errorState.emailErrors?.lastname}
+          errorState.emailErrors?.lastname} */}
         <button type="submit">submit</button>
       </form>
     </div>
