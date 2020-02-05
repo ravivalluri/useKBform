@@ -23,10 +23,10 @@ export default function SomeComponent() {
         <input
           ref={_register}
           name="name"
-          // _required="true"
+          _required="true"
           // _password="true"
-          // _number="true"
-          // _min="5"
+          _number="true"
+          _min="5"
           // _max="10"
           // _minlength="3"
           // _maxlength="5"
