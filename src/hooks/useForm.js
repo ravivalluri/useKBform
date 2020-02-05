@@ -92,120 +92,134 @@ Validate.prototype.hasAttribute = function(attr) {
 
 /* method for validating form */
 Validate.prototype.validated = function() {
-  const errors = {};
+  const requiredErrors = {};
+  const numErrors = {};
+  const minNumErrors = {};
+  const maxNumErrors = {};
+  const emailErrors = {};
 
   this.hasAttribute('_required').forEach(({ name, value }) => {
-    // console.log('required');
-    if (utils.isEmpty(value)) {
-      errors[name] = {};
-      errors[name] = 'this field is required';
-    }
+    if (utils.isEmpty(value)) requiredErrors[name] = 'this field is required';
+    else requiredErrors[name] = '';
   });
-
-  this.hasAttribute('_number').forEach(({ name, value, attributes }) => {
-    if (!utils.isNumber(value)) {
-      errors[name] = {};
-      errors[name] = 'this value is not number';
-    }
+  this.hasAttribute('_number').forEach(({ name, value }) => {
+    if (!utils.isNumber(value)) numErrors[name] = 'this value is not number';
+    else numErrors[name] = '';
   });
 
   this.hasAttribute('_email').forEach(({ name, value }) => {
-    if (!utils.isValidEmail(value)) {
-      errors[name] = {};
-      errors[name] = 'this email is not valid';
-    }
+    if (!utils.isValidEmail(value)) emailErrors[name] = 'this email is not valid';
+    else emailErrors[name] = '';
   });
 
   this.hasAttribute('_min').forEach(({ name, value, attributes }) => {
-    if (value < parseInt(attributes._min.value)) {
-      errors[name] = {};
-      errors[name] = `min ${attributes._min.value} required`;
-    }
+    if (value < parseInt(attributes._min.value)) minNumErrors[name] = `min ${attributes._min.value} required`;
+    else minNumErrors[name] = '';
   });
 
   this.hasAttribute('_max').forEach(({ name, value, attributes }) => {
-    if (value > parseInt(attributes._max.value)) {
-      errors[name] = {};
-      errors[name] = `max ${attributes._max.value} allowed`;
-    }
+    if (value > parseInt(attributes._max.value)) maxNumErrors[name] = `max ${attributes._max.value} allowed`;
+    else maxNumErrors[name] = '';
   });
 
-  this.hasAttribute('_minlength').forEach(({ name, value, attributes }) => {
-    if (value.length < parseInt(attributes._minlength.value)) {
-      errors[name] = {};
-      errors[name] = `min length ${attributes._minlength.value} required`;
-    }
-  });
+  // if (this.hasAttribute('_minlength').length !== 0) {
+  //   this.hasAttribute('_minlength').forEach(({ name, value, attributes }) => {
+  //     if (value.length < parseInt(attributes._minlength.value)) {
+  //       errors[name] = {};
+  //       errors[name] = `min length ${attributes._minlength.value} required`;
+  //     }
+  //   });
+  // }
 
-  this.hasAttribute('_maxlength').forEach(({ name, value, attributes }) => {
-    if (value.length > parseInt(attributes._maxlength.value)) {
-      errors[name] = {};
-      errors[name] = `max length ${attributes._maxlength.value} allowed`;
-    }
-  });
+  // if (this.hasAttribute('_maxlength').length !== 0) {
+  //   this.hasAttribute('_maxlength').forEach(({ name, value, attributes }) => {
+  //     if (value.length > parseInt(attributes._maxlength.value)) {
+  //       errors[name] = {};
+  //       errors[name] = `max length ${attributes._maxlength.value} allowed`;
+  //     }
+  //   });
+  // }
 
-  this.hasAttribute('_length').forEach(({ name, value, attributes }) => {
-    if (value.length !== parseInt(attributes._length.value)) {
-      errors[name] = {};
-      errors[name] = `required length is ${attributes._length.value} `;
-    }
-  });
+  // if (this.hasAttribute('_length').length !== 0) {
+  //   this.hasAttribute('_length').forEach(({ name, value, attributes }) => {
+  //     if (value.length !== parseInt(attributes._length.value)) {
+  //       errors[name] = {};
+  //       errors[name] = `required length is ${attributes._length.value} `;
+  //     }
+  //   });
+  // }
 
-  this.hasAttribute('_pin').forEach(({ name, value }) => {
-    if (!utils.isValidPin(value)) {
-      errors[name] = {};
-      errors[name] = 'this pin is not valid';
-    }
-  });
+  // if (this.hasAttribute('_pin').length !== 0) {
+  //   this.hasAttribute('_pin').forEach(({ name, value }) => {
+  //     if (!utils.isValidPin(value)) {
+  //       errors[name] = {};
+  //       errors[name] = 'this pin is not valid';
+  //     }
+  //   });
+  // }
 
-  this.hasAttribute('_amount').forEach(({ name, value }) => {
-    if (!utils.isValidAmount(value)) {
-      errors[name] = {};
-      errors[name] = 'this amount is not valid';
-    }
-  });
+  // if (this.hasAttribute('_amount').length !== 0) {
+  //   this.hasAttribute('_amount').forEach(({ name, value }) => {
+  //     if (!utils.isValidAmount(value)) {
+  //       errors[name] = {};
+  //       errors[name] = 'this amount is not valid';
+  //     }
+  //   });
+  // }
 
-  this.hasAttribute('_pan').forEach(({ name, value }) => {
-    if (!utils.isValidPan(value)) {
-      errors[name] = {};
-      errors[name] = 'this pan is not valid';
-    }
-  });
+  // if (this.hasAttribute('_pan').length !== 0) {
+  //   this.hasAttribute('_pan').forEach(({ name, value }) => {
+  //     if (!utils.isValidPan(value)) {
+  //       errors[name] = {};
+  //       errors[name] = 'this pan is not valid';
+  //     }
+  //   });
+  // }
 
-  this.hasAttribute('_phone').forEach(({ name, value }) => {
-    if (!utils.isValidPhone(value)) {
-      errors[name] = {};
-      errors[name] = 'this phone number is not valid';
-    }
-  });
+  // if (this.hasAttribute('_phone').length !== 0) {
+  //   this.hasAttribute('_phone').forEach(({ name, value }) => {
+  //     if (!utils.isValidPhone(value)) {
+  //       errors[name] = {};
+  //       errors[name] = 'this phone number is not valid';
+  //     }
+  //   });
+  // }
 
   /* TODO refactor */
-  const arr = [...this.hasAttribute('_password'), ...this.hasAttribute('_passwordrepeat')];
+  // const arr = [...this.hasAttribute('_password'), ...this.hasAttribute('_passwordrepeat')];
 
-  if (arr.length !== 0) {
-    let password;
-    let passwordRepeat;
-    let sname;
+  // if (arr.length !== 0) {
+  //   let password;
+  //   let passwordRepeat;
+  //   let sname;
 
-    this.hasAttribute('_password').forEach(({ value, name }) => {
-      if (!utils.isStrongPassword(value)) {
-        errors[name] = {};
-        errors[name] = 'passwords is not strong';
-      } else password = value;
-    });
+  //   this.hasAttribute('_password').forEach(({ value, name }) => {
+  //     if (!utils.isStrongPassword(value)) {
+  //       errors[name] = {};
+  //       errors[name] = 'passwords is not strong';
+  //     } else password = value;
+  //   });
 
-    this.hasAttribute('_passwordrepeat').forEach(({ name, value }) => {
-      passwordRepeat = value;
-      sname = name;
-    });
+  //   this.hasAttribute('_passwordrepeat').forEach(({ name, value }) => {
+  //     passwordRepeat = value;
+  //     sname = name;
+  //   });
 
-    if (password !== passwordRepeat) {
-      errors[sname] = {};
-      errors[sname] = 'passwords does not match';
-    }
-  }
+  //   if (password !== passwordRepeat) {
+  //     errors[sname] = {};
+  //     errors[sname] = 'passwords does not match';
+  //   }
+  // }
 
-  return errors;
+  // console.log(reqErrors.name);
+
+  return {
+    requiredErrors: requiredErrors.name !== '' && requiredErrors,
+    numErrors: numErrors.name !== '' && numErrors,
+    minNumErrors: minNumErrors.name !== '' && minNumErrors,
+    maxNumErrors: maxNumErrors.name !== '' && maxNumErrors,
+    emailErrors: emailErrors.name !== '' && emailErrors,
+  };
 };
 
 export default function useForm() {
@@ -227,8 +241,8 @@ export default function useForm() {
   const validate = new Validate(current);
 
   useEffect(() => {
-    console.log(current);
-  }, []);
+    console.log(errorState);
+  }, [errorState]);
 
   // useEffect(() => {
   //   console.log(current);
@@ -249,20 +263,20 @@ export default function useForm() {
     watchMode();
   }, [handleErrors]);
 
-  function test(e, ref) {
-    // console.log(ref.attributes);
-    if (ref.attributes?._number?.value === 'true') {
-      return utils.isNumber(e.key);
-    }
-    return ref;
-  }
+  // function test(e, ref) {
+  //   // console.log(ref.attributes);
+  //   if (ref.attributes?._number?.value === 'true') {
+  //     return utils.isNumber(e.key);
+  //   }
+  //   return ref;
+  // }
 
   /* push registered inputs to refs array */
   const _register = useCallback(
     ref => {
       current.push(ref);
       ref.onkeyup = onKeyUp;
-      ref.onkeydown = e => test(e, ref);
+      // ref.onkeydown = e => test(e, ref);
     },
     [onKeyUp]
   );

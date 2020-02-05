@@ -24,10 +24,10 @@ export default function SomeComponent() {
           ref={_register}
           name="name"
           _required="true"
-          // _password="true"
           _number="true"
           _min="5"
-          // _max="10"
+          _max="10"
+          // _password="true"
           // _minlength="3"
           // _maxlength="5"
           // _length="6"
@@ -37,23 +37,55 @@ export default function SomeComponent() {
           // _pin="true"
           // defaultValue={'default 1'}
         />
-        {errorState.name}
+        {errorState.requiredErrors?.name ||
+          errorState.numErrors?.name ||
+          errorState.minNumErrors?.name ||
+          errorState.maxNumErrors?.name ||
+          errorState.emailErrors?.name}
         <input
           ref={_register}
           name="surname"
-          // _passwordrepeat="true"
           _required="true"
           _number="true"
-          // defaultValue={'default 2'}
+          _min="5"
+          _max="10"
+          // _password="true"
+          // _minlength="3"
+          // _maxlength="5"
+          // _length="6"
+          // _email="true"
+          // _amount="true"
+          // _pan="true"
+          // _pin="true"
+          // defaultValue={'default 1'}
         />
-        {errorState.surname}
+        {errorState.requiredErrors?.surname ||
+          errorState.numErrors?.surname ||
+          errorState.minNumErrors?.surname ||
+          errorState.maxNumErrors?.surname ||
+          errorState.emailErrors?.surname}
         <input
           ref={_register}
           name="lastname"
-          // _required="true"
-          // defaultValue={'default 3'}
+          _required="true"
+          _number="true"
+          _min="5"
+          _max="10"
+          // _password="true"
+          // _minlength="3"
+          // _maxlength="5"
+          // _length="6"
+          // _email="true"
+          // _amount="true"
+          // _pan="true"
+          // _pin="true"
+          // defaultValue={'default 1'}
         />
-        {errorState.lastname}
+        {errorState.requiredErrors?.lastname ||
+          errorState.numErrors?.lastname ||
+          errorState.minNumErrors?.lastname ||
+          errorState.maxNumErrors?.lastname ||
+          errorState.emailErrors?.lastname}
         <button type="submit">submit</button>
       </form>
     </div>
