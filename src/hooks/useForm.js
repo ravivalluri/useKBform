@@ -112,17 +112,17 @@ Validate.prototype.validated = function() {
     else requiredErrors[name] = '';
   });
 
-  this.hasAttribute('_number').forEach(({ name, value, attributes }) => {
-    if (attributes._number.value === 'true') {
-      if (!utils.isNumber(value)) numErrors[name] = 'this value is not number';
-      else numErrors[name] = '';
-    }
-    return;
+  this.hasAttribute('_number').forEach(({ name, value }) => {
+    if (!utils.isNumber(value)) numErrors[name] = 'this value is not number';
+    numErrors[name] = '';
   });
 
   this.hasAttribute('_email').forEach(({ name, value, attributes }) => {
-    if (!utils.isValidEmail(value) && attributes._email.value === 'true') emailErrors[name] = 'this email is not valid';
-    else emailErrors[name] = '';
+    // console.log(value);
+    if (!utils.isEmpty(value)) {
+      if (!utils.isValidEmail(value)) emailErrors[name] = 'this email is not valid';
+      else emailErrors[name] = '';
+    } else return;
   });
 
   this.hasAttribute('_min').forEach(({ name, value, attributes }) => {
@@ -148,9 +148,9 @@ Validate.prototype.validated = function() {
   });
 
   this.hasAttribute('_length').forEach(({ name, value, attributes }) => {
-    if (value.length !== parseInt(attributes._length.value))
+    if (value.length !== parseInt(attributes._length.value)) {
       lengthErrors[name] = `required length is ${attributes._length.value} `;
-    else lengthErrors[name] = '';
+    } else lengthErrors[name] = '';
   });
 
   this.hasAttribute('_pin').forEach(({ name, value }) => {
@@ -159,8 +159,10 @@ Validate.prototype.validated = function() {
   });
 
   this.hasAttribute('_amount').forEach(({ name, value }) => {
-    if (!utils.isValidAmount(value)) amountErrors[name] = 'this amount is not valid';
-    else amountErrors[name] = 'this amount is not valid';
+    if (value) {
+      if (!utils.isValidAmount(value)) amountErrors[name] = 'this amount is not valid';
+      else amountErrors[name] = 'this amount is not valid';
+    } else return;
   });
 
   this.hasAttribute('_pan').forEach(({ name, value }) => {
@@ -198,6 +200,7 @@ Validate.prototype.validated = function() {
     else passwordRepeatErrors[sname] = '';
   }
 
+  /* TODO refactor error handling */
   return {
     requiredErrors:
       (requiredErrors.name !== '' && requiredErrors) ||
@@ -216,6 +219,35 @@ Validate.prototype.validated = function() {
     emailErrors:
       (emailErrors.name !== '' && emailErrors | (emailErrors.surname !== '') && emailErrors) ||
       (emailErrors.lastname !== '' && emailErrors),
+    minLengthErrors:
+      (minLengthErrors.name !== '' && minLengthErrors | (minLengthErrors.surname !== '') && minLengthErrors) ||
+      (minLengthErrors.lastname !== '' && minLengthErrors),
+    maxLengthErrors:
+      (maxLengthErrors.name !== '' && maxLengthErrors | (maxLengthErrors.surname !== '') && maxLengthErrors) ||
+      (maxLengthErrors.lastname !== '' && maxLengthErrors),
+    lengthErrors:
+      (lengthErrors.name !== '' && lengthErrors | (lengthErrors.surname !== '') && lengthErrors) ||
+      (lengthErrors.lastname !== '' && lengthErrors),
+    pinErrors:
+      (pinErrors.name !== '' && pinErrors | (pinErrors.surname !== '') && pinErrors) || (pinErrors.lastname !== '' && pinErrors),
+    amountErrors:
+      (amountErrors.name !== '' && amountErrors | (amountErrors.surname !== '') && amountErrors) ||
+      (amountErrors.lastname !== '' && amountErrors),
+    panErrors:
+      (panErrors.name !== '' && panErrors | (panErrors.surname !== '') && panErrors) || (panErrors.lastname !== '' && panErrors),
+    phoneErrors:
+      (phoneErrors.name !== '' && phoneErrors | (phoneErrors.surname !== '') && phoneErrors) ||
+      (phoneErrors.lastname !== '' && phoneErrors),
+    passwordStengthErrors:
+      (passwordStengthErrors.name !== '' &&
+        passwordStengthErrors | (passwordStengthErrors.surname !== '') &&
+        passwordStengthErrors) ||
+      (passwordStengthErrors.lastname !== '' && passwordStengthErrors),
+    passwordRepeatErrors:
+      (passwordRepeatErrors.name !== '' &&
+        passwordRepeatErrors | (passwordRepeatErrors.surname !== '') &&
+        passwordRepeatErrors) ||
+      (passwordRepeatErrors.lastname !== '' && passwordRepeatErrors),
   };
 };
 
@@ -261,10 +293,8 @@ export default function useForm() {
   }, [handleErrors]);
 
   function test(e, ref) {
-    // console.log(ref.attributes);
-    if (ref.attributes?._number?.value === 'true') {
-      return utils.isNumber(e.key);
-    }
+    if (ref.attributes?._number?.value) return utils.isNumber(e.key);
+    if (parseInt(ref.attributes?._length?.value) === ref.value?.length) e.preventDefault();
     return ref;
   }
 
