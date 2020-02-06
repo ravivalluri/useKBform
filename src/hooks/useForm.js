@@ -107,72 +107,89 @@ Validate.prototype.validated = function() {
   const passwordStengthErrors = {};
   const passwordRepeatErrors = {};
 
+  const errors = {};
+
   this.hasAttribute('_required').forEach(({ name, value }) => {
-    if (utils.isEmpty(value)) requiredErrors[name] = 'this field is required';
-    else requiredErrors[name] = '';
+    if (utils.isEmpty(value)) errors[name] = 'this field is required';
+    else errors[name] = '';
   });
 
   this.hasAttribute('_number').forEach(({ name, value }) => {
-    if (!utils.isNumber(value)) numErrors[name] = 'this value is not number';
-    numErrors[name] = '';
+    if (!utils.isNumber(value)) errors[name] = 'this value is not number';
+    errors[name] = '';
   });
 
-  this.hasAttribute('_email').forEach(({ name, value, attributes }) => {
-    // console.log(value);
+  this.hasAttribute('_email').forEach(({ name, value }) => {
     if (!utils.isEmpty(value)) {
-      if (!utils.isValidEmail(value)) emailErrors[name] = 'this email is not valid';
-      else emailErrors[name] = '';
-    } else return;
+      if (!utils.isValidEmail(value)) errors[name] = 'this email is not valid';
+      else errors[name] = '';
+    }
   });
 
   this.hasAttribute('_min').forEach(({ name, value, attributes }) => {
-    if (value < parseInt(attributes._min.value)) minNumErrors[name] = `min ${attributes._min.value} required`;
-    else minNumErrors[name] = '';
+    if (!utils.isEmpty(value)) {
+      if (value < parseInt(attributes._min.value)) errors[name] = `min ${attributes._min.value} required`;
+      else errors[name] = '';
+    }
   });
 
   this.hasAttribute('_max').forEach(({ name, value, attributes }) => {
-    if (value > parseInt(attributes._max.value)) maxNumErrors[name] = `max ${attributes._max.value} allowed`;
-    else maxNumErrors[name] = '';
+    if (!utils.isEmpty(value)) {
+      if (value > parseInt(attributes._max.value)) errors[name] = `max ${attributes._max.value} allowed`;
+      else errors[name] = '';
+    }
   });
 
   this.hasAttribute('_minlength').forEach(({ name, value, attributes }) => {
-    if (value.length < parseInt(attributes._minlength.value))
-      minLengthErrors[name] = `min length ${attributes._minlength.value} required`;
-    else minLengthErrors[name] = '';
+    if (!utils.isEmpty(value)) {
+      if (value.length < parseInt(attributes._minlength.value))
+        errors[name] = `min length ${attributes._minlength.value} required`;
+      else errors[name] = '';
+    }
   });
 
   this.hasAttribute('_maxlength').forEach(({ name, value, attributes }) => {
-    if (value.length > parseInt(attributes._maxlength.value))
-      maxLengthErrors[name] = `max length ${attributes._maxlength.value} allowed`;
-    else maxLengthErrors[name] = '';
+    if (!utils.isEmpty(value)) {
+      if (value.length > parseInt(attributes._maxlength.value))
+        errors[name] = `max length ${attributes._maxlength.value} allowed`;
+      else errors[name] = '';
+    }
   });
 
   this.hasAttribute('_length').forEach(({ name, value, attributes }) => {
-    if (value.length !== parseInt(attributes._length.value)) {
-      lengthErrors[name] = `required length is ${attributes._length.value} `;
-    } else lengthErrors[name] = '';
+    if (!utils.isEmpty(value)) {
+      if (value.length !== parseInt(attributes._length.value)) {
+        errors[name] = `required length is ${attributes._length.value} `;
+      } else errors[name] = '';
+    }
   });
 
   this.hasAttribute('_pin').forEach(({ name, value }) => {
-    if (!utils.isValidPin(value)) pinErrors[name] = 'this pin is not valid';
-    else pinErrors[name] = '';
+    if (!utils.isEmpty(value)) {
+      if (!utils.isValidPin(value)) errors[name] = 'this pin is not valid';
+      else errors[name] = '';
+    }
   });
 
   this.hasAttribute('_amount').forEach(({ name, value }) => {
-    if (value) {
-      if (!utils.isValidAmount(value)) amountErrors[name] = 'this amount is not valid';
-      else amountErrors[name] = 'this amount is not valid';
-    } else return;
+    if (!utils.isEmpty(value)) {
+      if (!utils.isValidAmount(value)) errors[name] = 'this amount is not valid';
+      else errors[name] = '';
+    }
   });
 
   this.hasAttribute('_pan').forEach(({ name, value }) => {
-    if (!utils.isValidPan(value)) panErrors[name] = 'this pan is not valid';
-    else panErrors[name] = '';
+    if (!utils.isEmpty(value)) {
+      if (!utils.isValidPan(value)) errors[name] = 'this pan is not valid';
+      else errors[name] = '';
+    }
   });
 
   this.hasAttribute('_phone').forEach(({ name, value }) => {
-    if (!utils.isValidPhone(value)) phoneErrors[name] = 'this phone number is not valid';
-    else phoneErrors[name] = '';
+    if (!utils.isEmpty(value)) {
+      if (!utils.isValidPhone(value)) errors[name] = 'this phone number is not valid';
+      else errors[name] = '';
+    }
   });
 
   /* TODO refactor */
@@ -184,71 +201,77 @@ Validate.prototype.validated = function() {
     let sname;
 
     this.hasAttribute('_password').forEach(({ value, name }) => {
-      if (!utils.isStrongPassword(value)) passwordStengthErrors[name] = 'passwords is not strong';
-      else {
-        password = value;
-        passwordStengthErrors[name] = '';
+      if (!utils.isEmpty(value)) {
+        if (!utils.isStrongPassword(value)) errors[name] = 'passwords is not strong';
+        else {
+          password = value;
+          errors[name] = '';
+        }
       }
     });
 
     this.hasAttribute('_passwordrepeat').forEach(({ name, value }) => {
-      passwordRepeat = value;
-      sname = name;
+      if (!utils.isEmpty(value)) {
+        passwordRepeat = value;
+        sname = name;
+      } else errors[sname] = 'please provide password repeat';
     });
 
-    if (password !== passwordRepeat) passwordRepeatErrors[sname] = 'passwords does not match';
-    else passwordRepeatErrors[sname] = '';
+    if (password !== passwordRepeat) errors[sname] = 'passwords does not match';
+    else errors[sname] = '';
   }
 
   /* TODO refactor error handling */
-  return {
-    requiredErrors:
-      (requiredErrors.name !== '' && requiredErrors) ||
-      (requiredErrors.surname !== '' && requiredErrors) ||
-      (requiredErrors.lastname !== '' && requiredErrors),
-    numErrors:
-      (numErrors.name !== '' && numErrors) || (numErrors.surname !== '' && numErrors) || (numErrors.lastname !== '' && numErrors),
-    minNumErrors:
-      (minNumErrors.name !== '' && minNumErrors) ||
-      (minNumErrors.surname !== '' && minNumErrors) ||
-      (minNumErrors.lastname !== '' && minNumErrors),
-    maxNumErrors:
-      (maxNumErrors.name !== '' && maxNumErrors) ||
-      (maxNumErrors.surname !== '' && maxNumErrors) ||
-      (maxNumErrors.lastname !== '' && maxNumErrors),
-    emailErrors:
-      (emailErrors.name !== '' && emailErrors | (emailErrors.surname !== '') && emailErrors) ||
-      (emailErrors.lastname !== '' && emailErrors),
-    minLengthErrors:
-      (minLengthErrors.name !== '' && minLengthErrors | (minLengthErrors.surname !== '') && minLengthErrors) ||
-      (minLengthErrors.lastname !== '' && minLengthErrors),
-    maxLengthErrors:
-      (maxLengthErrors.name !== '' && maxLengthErrors | (maxLengthErrors.surname !== '') && maxLengthErrors) ||
-      (maxLengthErrors.lastname !== '' && maxLengthErrors),
-    lengthErrors:
-      (lengthErrors.name !== '' && lengthErrors | (lengthErrors.surname !== '') && lengthErrors) ||
-      (lengthErrors.lastname !== '' && lengthErrors),
-    pinErrors:
-      (pinErrors.name !== '' && pinErrors | (pinErrors.surname !== '') && pinErrors) || (pinErrors.lastname !== '' && pinErrors),
-    amountErrors:
-      (amountErrors.name !== '' && amountErrors | (amountErrors.surname !== '') && amountErrors) ||
-      (amountErrors.lastname !== '' && amountErrors),
-    panErrors:
-      (panErrors.name !== '' && panErrors | (panErrors.surname !== '') && panErrors) || (panErrors.lastname !== '' && panErrors),
-    phoneErrors:
-      (phoneErrors.name !== '' && phoneErrors | (phoneErrors.surname !== '') && phoneErrors) ||
-      (phoneErrors.lastname !== '' && phoneErrors),
-    passwordStengthErrors:
-      (passwordStengthErrors.name !== '' &&
-        passwordStengthErrors | (passwordStengthErrors.surname !== '') &&
-        passwordStengthErrors) ||
-      (passwordStengthErrors.lastname !== '' && passwordStengthErrors),
-    passwordRepeatErrors:
-      (passwordRepeatErrors.name !== '' &&
-        passwordRepeatErrors | (passwordRepeatErrors.surname !== '') &&
-        passwordRepeatErrors) ||
-      (passwordRepeatErrors.lastname !== '' && passwordRepeatErrors),
-  };
+  // return {
+  //   requiredErrors:
+  //     (requiredErrors.name !== '' && requiredErrors) ||
+  //     (requiredErrors.surname !== '' && requiredErrors) ||
+  //     (requiredErrors.lastname !== '' && requiredErrors),
+  //   numErrors:
+  //     (numErrors.name !== '' && numErrors) || (numErrors.surname !== '' && numErrors) || (numErrors.lastname !== '' && numErrors),
+  //   minNumErrors:
+  //     (minNumErrors.name !== '' && minNumErrors) ||
+  //     (minNumErrors.surname !== '' && minNumErrors) ||
+  //     (minNumErrors.lastname !== '' && minNumErrors),
+  //   maxNumErrors:
+  //     (maxNumErrors.name !== '' && maxNumErrors) ||
+  //     (maxNumErrors.surname !== '' && maxNumErrors) ||
+  //     (maxNumErrors.lastname !== '' && maxNumErrors),
+  //   emailErrors:
+  //     (emailErrors.name !== '' && emailErrors | (emailErrors.surname !== '') && emailErrors) ||
+  //     (emailErrors.lastname !== '' && emailErrors),
+  //   minLengthErrors:
+  //     (minLengthErrors.name !== '' && minLengthErrors | (minLengthErrors.surname !== '') && minLengthErrors) ||
+  //     (minLengthErrors.lastname !== '' && minLengthErrors),
+  //   maxLengthErrors:
+  //     (maxLengthErrors.name !== '' && maxLengthErrors | (maxLengthErrors.surname !== '') && maxLengthErrors) ||
+  //     (maxLengthErrors.lastname !== '' && maxLengthErrors),
+  //   lengthErrors:
+  //     (lengthErrors.name !== '' && lengthErrors | (lengthErrors.surname !== '') && lengthErrors) ||
+  //     (lengthErrors.lastname !== '' && lengthErrors),
+  //   pinErrors:
+  //     (pinErrors.name !== '' && pinErrors | (pinErrors.surname !== '') && pinErrors) || (pinErrors.lastname !== '' && pinErrors),
+  //   amountErrors:
+  //     (amountErrors.name !== '' && amountErrors | (amountErrors.surname !== '') && amountErrors) ||
+  //     (amountErrors.lastname !== '' && amountErrors),
+  //   panErrors:
+  //     (panErrors.name !== '' && panErrors | (panErrors.surname !== '') && panErrors) || (panErrors.lastname !== '' && panErrors),
+  //   phoneErrors:
+  //     (phoneErrors.name !== '' && phoneErrors | (phoneErrors.surname !== '') && phoneErrors) ||
+  //     (phoneErrors.lastname !== '' && phoneErrors),
+  //   passwordStengthErrors:
+  //     (passwordStengthErrors.name !== '' &&
+  //       passwordStengthErrors | (passwordStengthErrors.surname !== '') &&
+  //       passwordStengthErrors) ||
+  //     (passwordStengthErrors.lastname !== '' && passwordStengthErrors),
+  //   passwordRepeatErrors:
+  //     (passwordRepeatErrors.name !== '' &&
+  //       passwordRepeatErrors | (passwordRepeatErrors.surname !== '') &&
+  //       passwordRepeatErrors) ||
+  //     (passwordRepeatErrors.lastname !== '' && passwordRepeatErrors),
+  // };
+
+  return { errors };
 };
 
 export default function useForm() {
@@ -270,8 +293,12 @@ export default function useForm() {
   const validate = new Validate(current);
 
   useEffect(() => {
-    console.log(errorState);
-  }, [errorState]);
+    console.log(formState);
+  }, [formState]);
+
+  useEffect(() => {
+    console.log(isFormValid);
+  }, [isFormValid]);
 
   useEffect(() => {
     handleErrors();
@@ -283,6 +310,8 @@ export default function useForm() {
     const isErrorsEmpty = Object.keys(manageErrors())
       .map(key => manageErrors()[key])
       .hasEmptyProperties();
+
+    console.log(isErrorsEmpty);
 
     setFormValid(isErrorsEmpty);
   }, [setFormValid, manageErrors]);
@@ -310,7 +339,7 @@ export default function useForm() {
 
   const createFormArrFrom = useCallback(arr => {
     const form = [];
-    arr.forEach(({ value, name }) => form.push({ value, name }));
+    arr.forEach(({ value, name }) => form.push({ [name]: value }));
     return form;
   }, []);
 

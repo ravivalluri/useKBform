@@ -32,12 +32,12 @@ export default function SomeComponent() {
           // _maxlength="5"
           // _length="6"
           // _email="true"
-          _amount="true"
+          // _amount="true"
           // _pan="true"
           // _pin="true"
           // defaultValue={'default 1'}
         />
-        {errorState.requiredErrors?.name ||
+        {/* {errorState.requiredErrors?.name ||
           errorState.numErrors?.name ||
           errorState.minNumErrors?.name ||
           errorState.maxNumErrors?.name ||
@@ -48,15 +48,18 @@ export default function SomeComponent() {
           errorState.panErrors?.name ||
           errorState.phoneErrors?.name ||
           errorState.passwordStengthErrors?.name ||
-          errorState.passwordRepeatErrors?.name}
-        {/* <input
+          errorState.passwordRepeatErrors?.name ||
+          errorState.minLengthErrors?.name ||
+          errorState.maxLengthErrors?.name} */}
+        {errorState.name}
+        <input
           ref={_register}
           name="surname"
           _required="true"
-          _number="false"
+          // _number="false"
           // _min="5"
           // _max="10"
-          // _password="true"
+          // _passwordrepeat="true"
           // _minlength="3"
           // _maxlength="5"
           // _length="6"
@@ -66,12 +69,20 @@ export default function SomeComponent() {
           // _pin="true"
           // defaultValue={'default 1'}
         />
-        {errorState.requiredErrors?.surname ||
+        {errorState.surname}
+        {/* {errorState.requiredErrors?.surname ||
           errorState.numErrors?.surname ||
           errorState.minNumErrors?.surname ||
           errorState.maxNumErrors?.surname ||
-          errorState.emailErrors?.surname}
-        <input
+          errorState.emailErrors?.surname ||
+          errorState.lengthErrors?.surname ||
+          errorState.pinErrors?.surname ||
+          errorState.amountErrors?.surname ||
+          errorState.panErrors?.surname ||
+          errorState.phoneErrors?.surname ||
+          errorState.passwordStengthErrors?.surname ||
+          errorState.passwordRepeatErrors?.surname} */}
+        {/* <input
           ref={_register}
           name="lastname"
           // _required="true"
