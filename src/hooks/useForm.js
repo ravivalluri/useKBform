@@ -7,13 +7,21 @@ function Utils() {}
 /* method to check that provided value is number */
 Utils.prototype.isNumber = function(num) {
   let regex = /^\d+$/;
-  return regex.test(String(num));
+  return regex.test(String(num.trim()));
+};
+
+/* method to check that typed event is number */
+Utils.prototype.isNumberEvent = function(event) {
+  event = event ? event : window.event;
+  const charCode = event.which ? event.which : event.keyCode;
+  if (charCode > 31 && (charCode < 48 || charCode > 57)) return false;
+  return true;
 };
 
 /* method to check email validity */
 Utils.prototype.isValidEmail = function(email) {
   let regex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  return regex.test(String(email));
+  return regex.test(String(email.trim()));
 };
 
 /* method to check that provided value is not empty */
@@ -29,25 +37,25 @@ Utils.prototype.isEmpty = function(value) {
 /* method to check PIN validity */
 Utils.prototype.isValidPin = function(pin) {
   let regex = /^[\w!o!O!_]{7}$/;
-  return regex.test(String(pin));
+  return regex.test(String(pin.trim()));
 };
 
 /* method to check amount validity */
 Utils.prototype.isValidAmount = function(amount) {
   let regex = /^[\d]+[\.][\d]{2}$/;
-  return regex.test(String(amount));
+  return regex.test(String(amount.trim()));
 };
 
 /* method to check phone validity */
 Utils.prototype.isValidPhone = function(phone) {
-  let regex = /^^((\+994)|0)((12[3-5]\d{6})|(((40)|(5[015])|(7[07]))[1-9]\d{6}))$/;
-  return regex.test(String(phone));
+  let regex = /^^((\+994)|0)((12[3-5]\d{6})|(((99)|(5[015])|(7[07]))[1-9]\d{6}))$/;
+  return regex.test(String(phone.trim()));
 };
 
 /* method to check password strength */
 Utils.prototype.isStrongPassword = function(password) {
   let regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/;
-  return regex.test(String(password));
+  return regex.test(String(password.trim()));
 };
 
 /* method to check PAN validity ,Luhn algorithm */
@@ -76,12 +84,13 @@ const utils = Object.create(Utils.prototype);
 /* Utils ends*/
 
 /* returns true if each object in array is empty */
-Array.prototype.hasEmptyProperties = function() {
-  return this.every(item => Object.getOwnPropertyNames(item).length === 0);
-};
+// Array.prototype.hasEmptyProperties = function() {
+//   return this.every(item => Object.getOwnPropertyNames(item).length === 0);
+// };
 
-function isObjectPropertiesEmpty(obj) {
-  return Object.keys(obj).map(key => obj[key]).length !== 0;
+/* returns true if each property in object is empty */
+function isEmptyPropertiesOf(obj) {
+  return Object.values(obj).every(item => utils.isEmpty(item));
 }
 
 /* core validate ctor function */
@@ -95,7 +104,7 @@ Validate.prototype.hasAttribute = function(attr) {
 };
 
 /* method for validating form */
-Validate.prototype.validated = function() {
+Validate.prototype.validate = function() {
   const errors = {};
 
   this.hasAttribute('_required').forEach(({ name, value }) => {
@@ -104,8 +113,10 @@ Validate.prototype.validated = function() {
   });
 
   this.hasAttribute('_number').forEach(({ name, value }) => {
-    if (!utils.isNumber(value)) errors[name] = 'this value is not number';
-    errors[name] = '';
+    if (!utils.isEmpty(value)) {
+      if (!utils.isNumber(value)) errors[name] = 'this value is not number';
+      errors[name] = '';
+    }
   });
 
   this.hasAttribute('_email').forEach(({ name, value }) => {
@@ -147,9 +158,8 @@ Validate.prototype.validated = function() {
 
   this.hasAttribute('_length').forEach(({ name, value, attributes }) => {
     if (!utils.isEmpty(value)) {
-      if (value.length !== parseInt(attributes._length.value)) {
-        errors[name] = `required length is ${attributes._length.value} `;
-      } else errors[name] = '';
+      if (value.length !== parseInt(attributes._length.value)) errors[name] = `required length is ${attributes._length.value} `;
+      else errors[name] = '';
     }
   });
 
@@ -221,7 +231,7 @@ export default function useForm() {
   const [errorState, setErrorState] = useState({});
 
   /* global form validation boolean */
-  const [isFormValid, setFormValid] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
 
   /* watch mode state */
   const [watchState, setWatchState] = useState();
@@ -229,58 +239,37 @@ export default function useForm() {
   /* init refs array */
   const { current } = useRef([]);
 
-  const validate = new Validate(current);
+  const form = new Validate(current);
+
+  const existingErrors = useCallback(() => form.validate(), []);
+
+  // useEffect(() => {
+  //   const x = Object.values(manageErrors()).every(item => utils.isEmpty(item));
+  //   console.log(x);
+  // }, [errorState, manageErrors]);
 
   useEffect(() => {
-    console.log(Object.keys(errorState).every(key => errorState[key]).length === 0);
-
-    console.log(manageErrors());
-  }, [errorState]);
-
-  useEffect(() => {
-    // console.log(isFormValid);
+    console.log(isFormValid);
   }, [isFormValid]);
 
-  useEffect(() => {
-    handleErrors();
-  }, []);
+  const handleErrors = useCallback(() => setIsFormValid(isEmptyPropertiesOf(existingErrors())), [
+    setIsFormValid,
+    existingErrors,
+    isEmptyPropertiesOf,
+  ]);
 
-  const manageErrors = useCallback(() => validate.validated(), []);
-
-  const handleErrors = useCallback(() => {
-    // const isErrorsEmpty = Object.keys(manageErrors()).map(key => manageErrors()[key]);
-    // // .hasEmptyProperties();
-
-    // console.log(manageErrors())
-
-    const isErrorsEmpty = isObjectPropertiesEmpty(manageErrors());
-
-    // console.log(errorState);
-    // console.log(manageErrors());
-
-    setFormValid(isErrorsEmpty);
-  }, [setFormValid, manageErrors, isObjectPropertiesEmpty]);
+  useEffect(() => handleErrors(), [handleErrors]);
 
   const onKeyUp = useCallback(() => {
     handleErrors();
     watchMode();
   }, [handleErrors]);
 
-  function test(e, ref) {
-    if (ref.attributes?._number?.value) return utils.isNumber(e.key);
-    if (parseInt(ref.attributes?._length?.value) === ref.value?.length) e.preventDefault();
+  const preventAction = useCallback((event, ref) => {
+    if (ref.attributes?._number?.value) return utils.isNumberEvent(event);
+    if (parseInt(ref.attributes?._length?.value) === ref.value?.length) event.preventDefault();
     return ref;
-  }
-
-  /* push registered inputs to refs array */
-  const _register = useCallback(
-    ref => {
-      current.push(ref);
-      ref.onkeyup = onKeyUp;
-      ref.onkeydown = e => test(e, ref);
-    },
-    [onKeyUp]
-  );
+  }, []);
 
   const createFormArrFrom = useCallback(arr => {
     const form = [];
@@ -291,13 +280,23 @@ export default function useForm() {
   /* you can use watch mode to track form state changes while debugging */
   const watchMode = useCallback(() => setWatchState(createFormArrFrom(current)), [createFormArrFrom, setWatchState]);
 
+  /* push registered inputs to refs array */
+  const _register = useCallback(
+    ref => {
+      current.push(ref);
+      ref.onkeyup = onKeyUp;
+      ref.onkeydown = event => preventAction(event, ref);
+    },
+    [onKeyUp, preventAction]
+  );
+
   const _handleSubmit = useCallback(
-    e => {
-      e.preventDefault();
-      setErrorState(manageErrors());
+    event => {
+      event.preventDefault();
+      setErrorState(existingErrors());
       if (isFormValid) setFormState(createFormArrFrom(current));
     },
-    [isFormValid, createFormArrFrom, setFormState, setErrorState, manageErrors]
+    [isFormValid, createFormArrFrom, setFormState, setErrorState, existingErrors]
   );
 
   return { _handleSubmit, _register, watchState, formState, errorState };

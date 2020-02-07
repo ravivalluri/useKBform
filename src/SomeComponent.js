@@ -30,7 +30,7 @@ export default function SomeComponent() {
           // _password="true"
           // _minlength="3"
           // _maxlength="5"
-          // _length="6"
+          _length="6"
           // _email="true"
           // _amount="true"
           // _pan="true"
@@ -41,7 +41,7 @@ export default function SomeComponent() {
         <input
           ref={_register}
           name="surname"
-          _required="true"
+          // _required="true"
           // _number="false"
           // _min="5"
           // _max="10"
