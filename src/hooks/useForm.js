@@ -80,6 +80,10 @@ Array.prototype.hasEmptyProperties = function() {
   return this.every(item => Object.getOwnPropertyNames(item).length === 0);
 };
 
+function isObjectPropertiesEmpty(obj) {
+  return Object.keys(obj).map(key => obj[key]).length !== 0;
+}
+
 /* core validate ctor function */
 function Validate(array) {
   this.array = array;
@@ -92,21 +96,6 @@ Validate.prototype.hasAttribute = function(attr) {
 
 /* method for validating form */
 Validate.prototype.validated = function() {
-  const requiredErrors = {};
-  const numErrors = {};
-  const minNumErrors = {};
-  const maxNumErrors = {};
-  const emailErrors = {};
-  const minLengthErrors = {};
-  const maxLengthErrors = {};
-  const lengthErrors = {};
-  const pinErrors = {};
-  const amountErrors = {};
-  const panErrors = {};
-  const phoneErrors = {};
-  const passwordStengthErrors = {};
-  const passwordRepeatErrors = {};
-
   const errors = {};
 
   this.hasAttribute('_required').forEach(({ name, value }) => {
@@ -221,57 +210,7 @@ Validate.prototype.validated = function() {
     else errors[sname] = '';
   }
 
-  /* TODO refactor error handling */
-  // return {
-  //   requiredErrors:
-  //     (requiredErrors.name !== '' && requiredErrors) ||
-  //     (requiredErrors.surname !== '' && requiredErrors) ||
-  //     (requiredErrors.lastname !== '' && requiredErrors),
-  //   numErrors:
-  //     (numErrors.name !== '' && numErrors) || (numErrors.surname !== '' && numErrors) || (numErrors.lastname !== '' && numErrors),
-  //   minNumErrors:
-  //     (minNumErrors.name !== '' && minNumErrors) ||
-  //     (minNumErrors.surname !== '' && minNumErrors) ||
-  //     (minNumErrors.lastname !== '' && minNumErrors),
-  //   maxNumErrors:
-  //     (maxNumErrors.name !== '' && maxNumErrors) ||
-  //     (maxNumErrors.surname !== '' && maxNumErrors) ||
-  //     (maxNumErrors.lastname !== '' && maxNumErrors),
-  //   emailErrors:
-  //     (emailErrors.name !== '' && emailErrors | (emailErrors.surname !== '') && emailErrors) ||
-  //     (emailErrors.lastname !== '' && emailErrors),
-  //   minLengthErrors:
-  //     (minLengthErrors.name !== '' && minLengthErrors | (minLengthErrors.surname !== '') && minLengthErrors) ||
-  //     (minLengthErrors.lastname !== '' && minLengthErrors),
-  //   maxLengthErrors:
-  //     (maxLengthErrors.name !== '' && maxLengthErrors | (maxLengthErrors.surname !== '') && maxLengthErrors) ||
-  //     (maxLengthErrors.lastname !== '' && maxLengthErrors),
-  //   lengthErrors:
-  //     (lengthErrors.name !== '' && lengthErrors | (lengthErrors.surname !== '') && lengthErrors) ||
-  //     (lengthErrors.lastname !== '' && lengthErrors),
-  //   pinErrors:
-  //     (pinErrors.name !== '' && pinErrors | (pinErrors.surname !== '') && pinErrors) || (pinErrors.lastname !== '' && pinErrors),
-  //   amountErrors:
-  //     (amountErrors.name !== '' && amountErrors | (amountErrors.surname !== '') && amountErrors) ||
-  //     (amountErrors.lastname !== '' && amountErrors),
-  //   panErrors:
-  //     (panErrors.name !== '' && panErrors | (panErrors.surname !== '') && panErrors) || (panErrors.lastname !== '' && panErrors),
-  //   phoneErrors:
-  //     (phoneErrors.name !== '' && phoneErrors | (phoneErrors.surname !== '') && phoneErrors) ||
-  //     (phoneErrors.lastname !== '' && phoneErrors),
-  //   passwordStengthErrors:
-  //     (passwordStengthErrors.name !== '' &&
-  //       passwordStengthErrors | (passwordStengthErrors.surname !== '') &&
-  //       passwordStengthErrors) ||
-  //     (passwordStengthErrors.lastname !== '' && passwordStengthErrors),
-  //   passwordRepeatErrors:
-  //     (passwordRepeatErrors.name !== '' &&
-  //       passwordRepeatErrors | (passwordRepeatErrors.surname !== '') &&
-  //       passwordRepeatErrors) ||
-  //     (passwordRepeatErrors.lastname !== '' && passwordRepeatErrors),
-  // };
-
-  return { errors };
+  return errors;
 };
 
 export default function useForm() {
@@ -293,11 +232,13 @@ export default function useForm() {
   const validate = new Validate(current);
 
   useEffect(() => {
-    console.log(formState);
-  }, [formState]);
+    console.log(Object.keys(errorState).every(key => errorState[key]).length === 0);
+
+    console.log(manageErrors());
+  }, [errorState]);
 
   useEffect(() => {
-    console.log(isFormValid);
+    // console.log(isFormValid);
   }, [isFormValid]);
 
   useEffect(() => {
@@ -307,14 +248,18 @@ export default function useForm() {
   const manageErrors = useCallback(() => validate.validated(), []);
 
   const handleErrors = useCallback(() => {
-    const isErrorsEmpty = Object.keys(manageErrors())
-      .map(key => manageErrors()[key])
-      .hasEmptyProperties();
+    // const isErrorsEmpty = Object.keys(manageErrors()).map(key => manageErrors()[key]);
+    // // .hasEmptyProperties();
 
-    console.log(isErrorsEmpty);
+    // console.log(manageErrors())
+
+    const isErrorsEmpty = isObjectPropertiesEmpty(manageErrors());
+
+    // console.log(errorState);
+    // console.log(manageErrors());
 
     setFormValid(isErrorsEmpty);
-  }, [setFormValid, manageErrors]);
+  }, [setFormValid, manageErrors, isObjectPropertiesEmpty]);
 
   const onKeyUp = useCallback(() => {
     handleErrors();
