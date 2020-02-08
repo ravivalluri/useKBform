@@ -42,7 +42,7 @@ Utils.prototype.isValidPin = function(pin) {
 
 /* method to check amount validity */
 Utils.prototype.isValidAmount = function(amount) {
-  let regex = /^[\d]+[\.][\d]{2}$/;
+  let regex = /^\d+(\.\d{1,2})?$/;
   return regex.test(String(amount.trim()));
 };
 
@@ -56,6 +56,12 @@ Utils.prototype.isValidPhone = function(phone) {
 Utils.prototype.isStrongPassword = function(password) {
   let regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/;
   return regex.test(String(password.trim()));
+};
+
+/* method to check PAN validity without Luhn algorithm */
+Utils.prototype.isValidPanBasic = function(pan) {
+  let regex = /^(\d{16}|\d{19})?$/;
+  return regex.test(String(pan.trim()));
 };
 
 /* method to check PAN validity ,Luhn algorithm */
@@ -184,6 +190,13 @@ Validate.prototype.validate = function() {
     }
   });
 
+  this.hasAttribute('_panbasic').forEach(({ name, value }) => {
+    if (!utils.isEmpty(value)) {
+      if (!utils.isValidPanBasic(value)) errors[name] = 'this pan is not valid';
+      else errors[name] = '';
+    }
+  });
+
   this.hasAttribute('_phone').forEach(({ name, value }) => {
     if (!utils.isEmpty(value)) {
       if (!utils.isValidPhone(value)) errors[name] = 'this phone number is not valid';
@@ -194,7 +207,7 @@ Validate.prototype.validate = function() {
   /* TODO refactor */
   const arr = [...this.hasAttribute('_password'), ...this.hasAttribute('_passwordrepeat')];
 
-  if (arr.length !== 0) {
+  if (arr.length) {
     let password;
     let passwordRepeat;
     let sname;
@@ -210,10 +223,12 @@ Validate.prototype.validate = function() {
     });
 
     this.hasAttribute('_passwordrepeat').forEach(({ name, value }) => {
-      if (!utils.isEmpty(value)) {
-        passwordRepeat = value;
-        sname = name;
-      } else errors[sname] = 'please provide password repeat';
+      if (!utils.isEmpty(password)) {
+        if (!utils.isEmpty(value)) {
+          passwordRepeat = value;
+          sname = name;
+        } else errors[name] = 'please provide password repeat';
+      }
     });
 
     if (password !== passwordRepeat) errors[sname] = 'passwords does not match';
@@ -221,6 +236,33 @@ Validate.prototype.validate = function() {
   }
 
   return errors;
+};
+
+/*  */
+Validate.prototype.checkAttrCombinations = function() {
+  this.array.forEach(({ attributes }) => {
+    if (attributes._number && attributes._email) throw new Error(`you cant use _number with _email ,are you crazy?`);
+    if (attributes._number && attributes._password) throw new Error(`you cant use _number with _password ,are you crazy?`);
+    if (attributes._number && attributes._passwordrepeat)
+      throw new Error(`you cant use _number with _passwordrepeat ,are you crazy?`);
+    if (attributes._number && attributes._amount) throw new Error(`you cant use _number with _amount ,are you crazy?`);
+    if (attributes._number && attributes._pan) throw new Error(`you cant use _number with _pan ,are you crazy?`);
+    if (attributes._number && attributes._panbasic) throw new Error(`you cant use _number with _panbasic ,are you crazy?`);
+    if (attributes._min && attributes._password) throw new Error(`you cant use _min with _password ,are you crazy?`);
+    if (attributes._min && attributes._passwordrepeat) throw new Error(`you cant use _min with _passwordrepeat ,are you crazy?`);
+    if (attributes._min && attributes._email) throw new Error(`you cant use _min with _email ,are you crazy?`);
+    if (attributes._min && attributes._amount) throw new Error(`you cant use _min with _amount ,are you crazy?`);
+    if (attributes._min && attributes._pan) throw new Error(`you cant use _min with _pan ,are you crazy?`);
+    if (attributes._min && attributes._panbasic) throw new Error(`you cant use _min with _panbasic ,are you crazy?`);
+    if (attributes._min && attributes._pin) throw new Error(`you cant use _min with _pin ,are you crazy?`);
+    if (attributes._max && attributes._password) throw new Error(`you cant use _max with _password ,are you crazy?`);
+    if (attributes._max && attributes._passwordrepeat) throw new Error(`you cant use _max with _passwordrepeat ,are you crazy?`);
+    if (attributes._max && attributes._email) throw new Error(`you cant use _max with _email ,are you crazy?`);
+    if (attributes._max && attributes._amount) throw new Error(`you cant use _max with _amount ,are you crazy?`);
+    if (attributes._max && attributes._pan) throw new Error(`you cant use _max with _pan ,are you crazy?`);
+    if (attributes._max && attributes._panbasic) throw new Error(`you cant use _max with _panbasic ,are you crazy?`);
+    if (attributes._max && attributes._pin) throw new Error(`you cant use _max with _pin ,are you crazy?`);
+  });
 };
 
 export default function useForm() {
@@ -239,18 +281,18 @@ export default function useForm() {
   /* init refs array */
   const { current } = useRef([]);
 
+  /* create form validation obj */
   const form = new Validate(current);
 
+  useEffect(() => form.checkAttrCombinations(), []);
+
+  /* get existing errors */
   const existingErrors = useCallback(() => form.validate(), []);
 
   // useEffect(() => {
   //   const x = Object.values(manageErrors()).every(item => utils.isEmpty(item));
   //   console.log(x);
   // }, [errorState, manageErrors]);
-
-  useEffect(() => {
-    console.log(isFormValid);
-  }, [isFormValid]);
 
   const handleErrors = useCallback(() => setIsFormValid(isEmptyPropertiesOf(existingErrors())), [
     setIsFormValid,
@@ -265,12 +307,14 @@ export default function useForm() {
     watchMode();
   }, [handleErrors]);
 
+  /* prevent user actions on specific cases */
   const preventAction = useCallback((event, ref) => {
     if (ref.attributes?._number?.value) return utils.isNumberEvent(event);
-    if (parseInt(ref.attributes?._length?.value) === ref.value?.length) event.preventDefault();
+    if (parseInt(ref.attributes?._length?.value) === ref.value?.length) event.keyCode !== 8 && event.preventDefault();
     return ref;
   }, []);
 
+  /* helper function to create name:value array */
   const createFormArrFrom = useCallback(arr => {
     const form = [];
     arr.forEach(({ value, name }) => form.push({ [name]: value }));
@@ -280,7 +324,7 @@ export default function useForm() {
   /* you can use watch mode to track form state changes while debugging */
   const watchMode = useCallback(() => setWatchState(createFormArrFrom(current)), [createFormArrFrom, setWatchState]);
 
-  /* push registered inputs to refs array */
+  /* push registered inputs to refs array & handle events*/
   const _register = useCallback(
     ref => {
       current.push(ref);
@@ -290,6 +334,7 @@ export default function useForm() {
     [onKeyUp, preventAction]
   );
 
+  /* submit function */
   const _handleSubmit = useCallback(
     event => {
       event.preventDefault();

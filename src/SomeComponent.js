@@ -23,17 +23,18 @@ export default function SomeComponent() {
         <input
           ref={_register}
           name="name"
-          _required="true"
-          // _number="true"
+          // _required="true"
+          _number="true"
           // _min="5"
           // _max="10"
           // _password="true"
           // _minlength="3"
           // _maxlength="5"
-          _length="6"
+          // _length="6"
           // _email="true"
           // _amount="true"
           // _pan="true"
+          // _panbasic="true"
           // _pin="true"
           // defaultValue={'default 1'}
         />
@@ -42,7 +43,7 @@ export default function SomeComponent() {
           ref={_register}
           name="surname"
           // _required="true"
-          // _number="false"
+          // _number="true"
           // _min="5"
           // _max="10"
           // _passwordrepeat="true"
