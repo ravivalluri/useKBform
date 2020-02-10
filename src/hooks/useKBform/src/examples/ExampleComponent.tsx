@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useContext, useRef } from 'react';
-import useKBform from './hooks/useKBform/src/useKBform';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import useKBform from '../useKBform';
 
-export default function SomeComponent() {
+export default function ExampleComponent(): React.ReactElement {
   const { _handleSubmit, _register, watchState, formState, errorState } = useKBform();
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function SomeComponent() {
           // _pan="true"
           // _panbasic="true"
           // _pin="true"
-          defaultValue={'default 1'}
+          // defaultValue={'default 1'}
         />
         {errorState.name}
         <input
