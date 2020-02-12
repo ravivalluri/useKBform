@@ -13,9 +13,9 @@ export default function ExampleComponent(): React.ReactElement {
 
   return (
     <div>
-      <form onSubmit={_handleSubmit}>
+      <form ref={_register}>
         <input
-          ref={_register}
+          // ref={_register}
           name="name"
           _required="true"
           // _number="true"
@@ -34,7 +34,7 @@ export default function ExampleComponent(): React.ReactElement {
         />
         {errorState.name}
         <input
-          ref={_register}
+          // ref={_register}
           name="lastname"
           // _required="true"
           // _number="true"

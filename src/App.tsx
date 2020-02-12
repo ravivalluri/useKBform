@@ -1,11 +1,11 @@
-import React from "react";
-import "./App.css";
-import SomeComponent from "./SomeComponent";
+import React from 'react';
+import './App.css';
+import ExampleComponent from './hooks/useKBform/src/examples/ExampleComponent';
 
 const App = () => {
   return (
     <div className="App">
-      <SomeComponent />
+      <ExampleComponent />
     </div>
   );
 };
