@@ -36,7 +36,7 @@ export default function ExampleComponent(): React.ReactElement {
         <input
           // ref={_register}
           name="lastname"
-          // _required="true"
+          _required="true"
           // _number="true"
           // _min="5"
           // _max="10"
