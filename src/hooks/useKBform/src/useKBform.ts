@@ -6,137 +6,145 @@
 
 import { SyntheticEvent, useCallback, useEffect, useRef, useState } from 'react';
 import isEmptyPropertiesOf from './helpers/isEmptyPropertiesOf';
-import { ICurrent, IForm, IHTMLInputEvent } from './types/types';
+import { ICurrent, IForm, IFormData, IHTMLInputEvent } from './models';
 import utils from './utils/utils';
 import Validate from './validate/core';
 
 declare module 'react' {
-  interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
-    _required?: string;
-    _number?: string;
-    _min?: string;
-    _max?: string;
-    _password?: string;
-    _passwordrepeat?: string;
-    _minlength?: string;
-    _maxlength?: string;
-    _length?: string;
-    _email?: string;
-    _amount?: string;
-    _pan?: string;
-    _panbasic?: string;
-    _pin?: string;
-  }
+    interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
+        _required?: string;
+        _number?: string;
+        _min?: string;
+        _max?: string;
+        _password?: string;
+        _passwordrepeat?: string;
+        _minlength?: string;
+        _maxlength?: string;
+        _length?: string;
+        _email?: string;
+        _amount?: string;
+        _pan?: string;
+        _panbasic?: string;
+        _pin?: string;
+        _next?: string;
+    }
 }
 
 interface IUseKBform {
-  _handleSubmit(event: SyntheticEvent): void;
-  _register(ref: any): void;
-  watchState?: IForm[];
-  formState?: IForm[];
-  errorState: any;
+    _register (ref: any): void;
+    _handleSubmit (event: SyntheticEvent): void;
+    watchState: IFormData[];
+    formState: IFormData[];
+    errorState: any;
 }
 
-export default function useKBform(): IUseKBform {
-  /* validated form state for client */
-  const [formState, setFormState] = useState<IForm[]>();
+export default function useKBform (): IUseKBform {
+    /* validated form state for client */
+    const [formState, setFormState] = useState<IFormData[]>();
 
-  /* errors state for client */
-  const [errorState, setErrorState] = useState<any>({} as any);
+    /* errors state for client */
+    const [errorState, setErrorState] = useState<any>({} as any);
 
-  /* global form validation boolean */
-  const [isFormValid, setIsFormValid] = useState<boolean>(false);
+    /* global form validation boolean */
+    const [isFormValid, setIsFormValid] = useState<boolean>(false);
 
-  /* watch mode state */
-  const [watchState, setWatchState] = useState<IForm[]>();
+    /* watch mode state */
+    const [watchState, setWatchState] = useState<IFormData[]>();
 
-  /* init refs array */
-  const { current } = useRef<any>([]);
+    /* init refs array */
+    const { current } = useRef<any[]>([]);
 
-  /* create form validation obj */
-  const formInstance = new (Validate as any)(current);
+    /* create form validation obj */
+    const formInstance = new (Validate as any)(current);
 
-  // useEffect(() => formInstance.checkAttrCombinations(), []);
+    // useEffect(() => formInstance.checkAttrCombinations(), []);
 
-  /* get existing errors */
-  const existingErrors = useCallback(() => formInstance.validate(), [formInstance]);
+    /* get existing errors */
+    const existingErrors = useCallback(() => formInstance.validate(), []);
 
-  const handleErrors = useCallback(() => setIsFormValid(isEmptyPropertiesOf(existingErrors())), [
-    setIsFormValid,
-    existingErrors,
-    isEmptyPropertiesOf,
-  ]);
+    const filterInputRefsFrom = useCallback((ref: any) => [...ref].filter((item: any) => item.nodeName === 'INPUT'), []);
 
-  useEffect(() => {
-    handleErrors();
-  }, []);
+    const handleErrors = useCallback(() => setIsFormValid(isEmptyPropertiesOf(existingErrors())), [
+        setIsFormValid,
+        existingErrors,
+        isEmptyPropertiesOf,
+    ]);
 
-  useEffect(() => {
-    console.log(formState);
-  }, [formState]);
+    useEffect(() => {
+        console.log(current);
+    }, []);
 
-  const onBlur = useCallback(() => {
-    handleErrors();
-    watchMode();
-  }, [handleErrors]);
+    const onBlur = useCallback(() => {
+        handleErrors();
+        watchMode();
+    }, [handleErrors]);
 
-  /* prevent user actions on specific cases */
-  const preventAction = useCallback((event, ref) => {
-    if (ref.attributes?._number?.value) {
-      return utils.isNumberEvent(event);
-    }
-    if (parseInt(ref.attributes?._length?.value, 10) === ref.value?.length) {
-      return event.keyCode !== 8 && event.preventDefault();
-    }
-    return ref;
-  }, []);
+    /* prevent user actions on specific cases */
+    const preventAction = useCallback(
+        (event, formRef) => {
+            let isNumberBool: boolean;
 
-  /* helper function to create name:value array */
-  const createFormArrFrom = useCallback(arr => {
-    const form: IForm[] = [];
-    arr.forEach(({ value, name }: IForm) => form.push({ [name]: value }));
-    return form;
-  }, []);
+            filterInputRefsFrom(formRef).forEach((input: any) => {
+                if (input.attributes?._number?.value) {
+                    isNumberBool = utils.isNumberEvent(event);
+                }
 
-  /* you can use watch mode to track form state changes while debugging */
-  const watchMode = useCallback(() => setWatchState(createFormArrFrom(current[0])), [createFormArrFrom, setWatchState]);
+                if (parseInt(input.attributes?._length?.value, 10) === input.value?.length) {
+                    if (event.keyCode !== 8) {
+                        event.preventDefault();
+                    }
+                }
+            });
 
-  const onSubmit = (event: SyntheticEvent) => {
-    event.preventDefault();
-    setErrorState(existingErrors());
-    if (isFormValid) {
-      setFormState(createFormArrFrom(current[0]));
-    }
-  };
+            return isNumberBool;
+        },
+        [filterInputRefsFrom],
+    );
 
-  /* push registered inputs to refs array & handle events*/
-  const _register = useCallback((ref: any) => {
-    current.push([...ref].filter((item: any) => item.nodeName === 'INPUT'));
+    /* helper function to create name:value array */
+    const createFormArrFrom = useCallback(arr => {
+        const form: IFormData[] = [];
+        arr?.forEach(({ value, name }: IForm) => form.push({ [name]: value }));
+        return form;
+    }, []);
 
-    [...ref]
-      .filter((item: any) => item.nodeName === 'INPUT')
-      .forEach((item: any) => {
-        item.onblur = onBlur;
-      });
+    /* you can use watch mode to track form state changes while debugging */
+    const watchMode = useCallback(() => setWatchState(createFormArrFrom(current[0])), [createFormArrFrom, setWatchState]);
 
-    // console.log([...ref].filter((item: any) => item.nodeName === 'INPUT')[0].onblur);
+    const onSubmit = useCallback((event: SyntheticEvent) => {
+        event.preventDefault();
+        // setErrorState(existingErrors());
+        // if (isFormValid) {
+        //     setFormState(createFormArrFrom(current[0]));
+        // }
+    }, []);
 
-    // ref.onblur = onBlur;
-    ref.onsubmit = (event: SyntheticEvent) => onSubmit(event);
-    //   ref.onkeydown = (event: IHTMLInputEvent) => preventAction(event, ref);
-  }, []);
+    const _register = useCallback(
+        (formRef: any) => {
+            current.push(filterInputRefsFrom(formRef));
 
-  /* submit function */
-  const _handleSubmit = useCallback(
-    (event: SyntheticEvent) => {
-      event.preventDefault();
-      // setErrorState(existingErrors());
-      if (isFormValid) {
-        setFormState(createFormArrFrom(current));
-      }
-    },
-    [isFormValid, createFormArrFrom, setFormState, setErrorState]
-  );
+            filterInputRefsFrom(formRef).forEach((input: any) => {
+                input.onblur = onBlur;
+                input.onkeydown = (event: IHTMLInputEvent) => preventAction(event, formRef);
+            });
 
-  return { _handleSubmit, _register, watchState, formState, errorState };
+            formRef.onsubmit = (event: SyntheticEvent) => onSubmit(event);
+            // ref.onsubmit = (event: SyntheticEvent) => event.preventDefault();
+        },
+        [preventAction, filterInputRefsFrom],
+    );
+
+    /* submit function */
+    const _handleSubmit = useCallback(
+        (event: SyntheticEvent) => {
+            event.preventDefault();
+            setErrorState(existingErrors());
+            if (isFormValid) {
+                setFormState(createFormArrFrom(current[0]));
+            }
+        },
+        [isFormValid, createFormArrFrom, setFormState, setErrorState, existingErrors],
+    );
+
+    return { _register, watchState, formState, errorState, _handleSubmit };
 }
