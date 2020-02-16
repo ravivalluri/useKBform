@@ -4,18 +4,30 @@ import Input from './Input';
 
 /* example usage of useKBform()  */
 export default function ExampleComponent(): React.ReactElement {
-  const { _register, watchState, formState, errorState, _handleSubmit } = useKBform();
+  const { _register, watchState, formState, errorState, formStatus, _handleSubmit } = useKBform();
+
+  // useEffect(() => {
+  //   /* temp condition */
+  //   if (formState) {
+  //     console.log(formState);
+  //   }
+  // }, [formState]);
 
   useEffect(() => {
-    /* temp condition */
-    if (formState) {
-      console.log(formState);
+    if (formStatus?.firstform) {
+      console.log('first form is clean', formStatus);
     }
-  }, [formState]);
+  }, [formStatus]);
+
+  useEffect(() => {
+    if (formStatus?.secondform) {
+      console.log('second form is clean', formStatus);
+    }
+  }, [formStatus]);
 
   return (
     <div>
-      <form ref={_register}>
+      <form ref={_register} _formname="firstform">
         {/* <Input ref={_register} {...{ errorState }} name="name" _required="true" />
                 <Input ref={_register} {...{ errorState }} name="surname" /> */}
 
@@ -36,7 +48,7 @@ export default function ExampleComponent(): React.ReactElement {
           // _pin="true"
           // defaultValue={'default 1'}
         />
-        {errorState.name}
+        {errorState?.errors.name}
         <input
           name="lastname"
           // _required="true"
@@ -53,12 +65,12 @@ export default function ExampleComponent(): React.ReactElement {
           // _pin="true"
           // defaultValue={'default 1'}
         />
-        {errorState.lastname}
+        {errorState?.errors.lastname}
 
         <button type="submit">next</button>
       </form>
 
-      <form ref={_register}>
+      <form ref={_register} _formname="secondform" onSubmit={_handleSubmit}>
         <input
           name="front"
           _required="true"
@@ -76,7 +88,7 @@ export default function ExampleComponent(): React.ReactElement {
           // _pin="true"
           // defaultValue={'default 1'}
         />
-        {errorState.front}
+        {errorState?.errors.front}
         {/* <input
           name="back"
           _required="true"

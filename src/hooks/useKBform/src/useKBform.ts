@@ -1,8 +1,10 @@
-/*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */
-/*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */
-/*  */ /* Author Rustam Islamov ,not all rights reserved :) */ /*  */
-/*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */
-/*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */
+/*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */
+/*  ####################################################################  */
+/*  ####################################################################  */
+/*  ##    Made with ❤ by Rustam Islamov ,not all rights reserved :)  ##  */
+/*  ####################################################################  */
+/*  ####################################################################  */
+/*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */
 
 import { SyntheticEvent, useCallback, useEffect, useRef, useState } from 'react';
 import isEmptyPropertiesOf from './helpers/isEmptyPropertiesOf';
@@ -28,6 +30,7 @@ declare module 'react' {
     _pin?: string;
     _next?: string;
     _submitnext?: string;
+    _formname?: string;
   }
 }
 
@@ -37,6 +40,7 @@ interface IUseKBform {
   watchState?: IFormData[];
   formState?: IFormData[];
   errorState: any;
+  formStatus: any;
 }
 
 export default function useKBform(): IUseKBform {
@@ -44,52 +48,34 @@ export default function useKBform(): IUseKBform {
   const [formState, setFormState] = useState<IFormData[]>();
 
   /* errors state for client */
-  const [errorState, setErrorState] = useState<IError>({} as any);
+  const [errorState, setErrorState] = useState<any>({ global: false, errors: { empty: 'no' } } as any);
 
   /* global form validation boolean */
-  const [isFormValid, setIsFormValid] = useState<boolean>(false);
+  // const [isFormValid, setIsFormValid] = useState<boolean>(false);
 
   /* watch mode state */
   const [watchState, setWatchState] = useState<IFormData[]>();
 
+  /* status of each form to be sent to client */
+  const [formStatus, setFormStatus] = useState<any>();
+
   /* init refs array */
   const { current } = useRef<any[]>([]);
-
-  /* create form validation obj */
-  // const formInstance = new (Validate as any)(current);
 
   // useEffect(() => formInstance.checkAttrCombinations(), []);
 
   useEffect(() => {
-    console.log(errorState);
-  }, [errorState]);
+    console.log(formStatus);
+  }, [formStatus]);
 
   /* get existing errors */
   const existingErrors = useCallback(formInstance => formInstance.validate(), []);
 
+  /* helper function to find ref by node name */
   const filterRefsFrom = useCallback(
     (refs: any, refType: string) => [...refs].filter((item: any) => item.nodeName === refType),
     []
   );
-
-  // const handleErrors = useCallback(formInstance => setIsFormValid(isEmptyPropertiesOf(existingErrors())), [
-  //   setIsFormValid,
-  //   existingErrors,
-  //   isEmptyPropertiesOf,
-  // ]);
-
-  const onClick = useCallback(
-    form => {
-      const formInstance = new (Validate as any)(filterRefsFrom(form, 'INPUT'));
-      setErrorState(existingErrors(formInstance));
-    },
-    [filterRefsFrom, setErrorState]
-  );
-
-  // const onBlur = useCallback(() => {
-  //   handleErrors();
-  //   watchMode();
-  // }, [handleErrors]);
 
   /* prevent user actions on specific cases */
   const preventAction = useCallback((event, formRef) => {
@@ -112,32 +98,57 @@ export default function useKBform(): IUseKBform {
 
   /* helper function to create name:value array */
   const createFormArrFrom = useCallback(arr => {
-    const form: IFormData[] = [];
-    arr?.forEach(({ value, name }: IForm) => form.push({ [name]: value }));
-    return form;
+    console.log(arr);
+    // const form: IFormData[] = [];
+    // arr?.forEach(({ value, name }: IForm) => form.push({ [name]: value }));
+    return arr;
   }, []);
 
   /* you can use watch mode to track form state changes while debugging */
-  const watchMode = useCallback(() => setWatchState(createFormArrFrom(current[0])), [createFormArrFrom, setWatchState]);
+  // const watchMode = useCallback(() => setWatchState(createFormArrFrom(current[0])), [createFormArrFrom, setWatchState]);
 
-  const onSubmit = useCallback((event: SyntheticEvent) => {
+  useEffect(() => {
+    if (isEmptyPropertiesOf(errorState.errors)) {
+      setErrorState({ ...errorState, global: true });
+    }
+  }, [setErrorState, errorState.errors]);
+
+  useEffect(() => {
+    if (errorState.global === true) {
+      console.log('oooo');
+      setFormStatus(true);
+    }
+  }, [errorState.global]);
+
+  const onClick = useCallback(
+    form => {
+      const formInstance = new (Validate as any)(filterRefsFrom(form, 'INPUT'));
+      const errors = existingErrors(formInstance);
+      setErrorState({ ...errorState, errors });
+    },
+    [filterRefsFrom, setErrorState, existingErrors]
+  );
+
+  const onSubmit = useCallback((event: any, currentForm: any) => {
     event.preventDefault();
-    // setErrorState(existingErrors());
-    // if (isFormValid) {
-    //     setFormState(createFormArrFrom(current[0]));
-    // }
+    const status = {} as any;
+
+    if (errorState.global === true) {
+      status[currentForm.attributes._formname.value] = 'clean';
+      // setFormStatus(status);
+    }
   }, []);
 
   const _register = useCallback(
     (formRef: any) => {
-      // current.push(filterInputRefsFrom(formRef));
       current.push(formRef);
 
       for (let form = 0; form < current.length; form++) {
-        for (let el = 0; el < current[form].length; el++) {
+        for (let el = 0; el < current[form]?.length; el++) {
           if (current[form][el].nodeName === 'BUTTON') {
             current[form][el].onclick = () => onClick(current[form]);
           }
+          current[form].onsubmit = (event: any) => onSubmit(event, current[form]);
         }
       }
 
@@ -145,24 +156,22 @@ export default function useKBform(): IUseKBform {
       //   input.onblur = onBlur;
       //   input.onkeydown = (event: IHTMLInputEvent) => preventAction(event, formRef);
       // });
-
-      formRef.onsubmit = (event: SyntheticEvent) => onSubmit(event);
-      // ref.onsubmit = (event: SyntheticEvent) => event.preventDefault();
     },
-    [preventAction]
+    [onSubmit, onClick]
   );
 
   /* submit function */
   const _handleSubmit = useCallback(
     (event: SyntheticEvent) => {
       event.preventDefault();
-      // setErrorState(existingErrors());
-      // if (isFormValid) {
-      //   setFormState(createFormArrFrom(current[0]));
-      // }
+
+      if (errorState.global) {
+        // setFormState(createFormArrFrom(current));
+        console.log('submitted', current);
+      }
     },
-    [isFormValid, createFormArrFrom, setFormState, setErrorState]
+    [createFormArrFrom, setFormState, errorState.global]
   );
 
-  return { _register, watchState, formState, errorState, _handleSubmit };
+  return { _register, watchState, formState, errorState, formStatus, _handleSubmit };
 }
