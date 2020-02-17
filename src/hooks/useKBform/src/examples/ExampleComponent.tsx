@@ -4,14 +4,18 @@ import Input from './Input';
 
 /* example usage of useKBform()  */
 export default function ExampleComponent(): React.ReactElement {
-  const { _register, watchState, formState, errorState, formStatus, _handleSubmit } = useKBform();
+  const { _register, _handleSubmit, watchState, formState, errorState, formStatus } = useKBform();
 
-  // useEffect(() => {
-  //   /* temp condition */
-  //   if (formState) {
-  //     console.log(formState);
-  //   }
-  // }, [formState]);
+  useEffect(() => {
+    /* temp condition */
+    if (formState) {
+      console.log(formState);
+    }
+  }, [formState]);
+
+  useEffect(() => {
+    console.log(watchState);
+  }, [watchState]);
 
   useEffect(() => {
     if (formStatus?.firstform) {
@@ -28,8 +32,8 @@ export default function ExampleComponent(): React.ReactElement {
   return (
     <div>
       <form ref={_register} _formname="firstform">
-        {/* <Input ref={_register} {...{ errorState }} name="name" _required="true" />
-                <Input ref={_register} {...{ errorState }} name="surname" /> */}
+        <Input ref={_register} {...{ errorState }} name="name" _required="true" />
+        <Input ref={_register} {...{ errorState }} name="surname" />
 
         <input
           name="name"
@@ -48,7 +52,7 @@ export default function ExampleComponent(): React.ReactElement {
           // _pin="true"
           // defaultValue={'default 1'}
         />
-        {errorState?.errors.name}
+        {errorState?.name}
         <input
           name="lastname"
           // _required="true"
@@ -65,7 +69,7 @@ export default function ExampleComponent(): React.ReactElement {
           // _pin="true"
           // defaultValue={'default 1'}
         />
-        {errorState?.errors.lastname}
+        {errorState?.lastname}
 
         <button type="submit">next</button>
       </form>
@@ -88,8 +92,8 @@ export default function ExampleComponent(): React.ReactElement {
           // _pin="true"
           // defaultValue={'default 1'}
         />
-        {errorState?.errors.front}
-        {/* <input
+        {errorState?.front}
+        <input
           name="back"
           _required="true"
           // _number="true"
@@ -105,7 +109,7 @@ export default function ExampleComponent(): React.ReactElement {
           // _pin="true"
           // defaultValue={'default 1'}
         />
-        {errorState.back} */}
+        {errorState?.back}
 
         <button type="submit">submit</button>
       </form>
