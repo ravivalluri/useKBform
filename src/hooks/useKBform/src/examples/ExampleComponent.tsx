@@ -2,117 +2,51 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import useKBform from '../useKBform';
 import Input from './Input';
 
-/* example usage of useKBform()  */
-export default function ExampleComponent(): React.ReactElement {
-  const { _register, _handleSubmit, watchState, formState, errorState, formStatus } = useKBform();
+/* example usage of useKBform() with single form or multiple step by step validation  */
+export default function ExampleComponent (): React.ReactElement {
+    const { _register, _handleSubmit, watchState, formState, errorState, formStatus } = useKBform();
 
-  useEffect(() => {
-    /* temp condition */
-    if (formState) {
-      console.log(formState);
-    }
-  }, [formState]);
+    useEffect(() => {
+        /* temp condition */
+        if (formState) {
+            console.log(formState);
+        }
+    }, [formState]);
 
-  useEffect(() => {
-    console.log(watchState);
-  }, [watchState]);
+    /* watch state */
+    useEffect(() => {
+        console.log(watchState);
+    }, [watchState]);
 
-  useEffect(() => {
-    if (formStatus?.firstform) {
-      console.log('first form is clean', formStatus);
-    }
-  }, [formStatus]);
+    /* status of first form by name "firstform */
+    useEffect(() => {
+        if (formStatus?.firstform) {
+            console.log('first form is clean', formStatus);
+        }
+    }, [formStatus]);
 
-  useEffect(() => {
-    if (formStatus?.secondform) {
-      console.log('second form is clean', formStatus);
-    }
-  }, [formStatus]);
+    /* status of second form by name "secondform" */
+    useEffect(() => {
+        if (formStatus?.secondform) {
+            console.log('second form is clean', formStatus);
+        }
+    }, [formStatus]);
 
-  return (
-    <div>
-      <form ref={_register} _formname="firstform">
-        <Input ref={_register} {...{ errorState }} name="name" _required="true" />
-        <Input ref={_register} {...{ errorState }} name="surname" />
+    return (
+        <div>
+            <form ref={_register} _formname="firstform">
+                <Input errorstate={errorState} name="name" _required="true" />
+                <Input errorstate={errorState} name="surname" />
 
-        <input
-          name="name"
-          _required="true"
-          // _number="true"
-          // _min="5"
-          // _max="10"
-          // _password="true"
-          // _minlength="3"
-          // _maxlength="5"
-          // _length="6"
-          // _email="true"
-          // _amount="true"
-          // _pan="true"
-          // _panbasic="true"
-          // _pin="true"
-          // defaultValue={'default 1'}
-        />
-        {errorState?.name}
-        <input
-          name="lastname"
-          // _required="true"
-          // _number="true"
-          // _min="5"
-          // _max="10"
-          // _passwordrepeat="true"
-          // _minlength="3"
-          // _maxlength="5"
-          // _length="6"
-          // _email="true"
-          // _amount="true"
-          // _pan="true"
-          // _pin="true"
-          // defaultValue={'default 1'}
-        />
-        {errorState?.lastname}
+                <button type="submit">next</button>
+            </form>
 
-        <button type="submit">next</button>
-      </form>
+            <form ref={_register} _formname="secondform" onSubmit={_handleSubmit}>
+                <Input errorstate={errorState} name="back" _required="true" />
+                <Input errorstate={errorState} name="front" />
 
-      <form ref={_register} _formname="secondform" onSubmit={_handleSubmit}>
-        <input
-          name="front"
-          _required="true"
-          // _number="true"
-          // _min="5"
-          // _max="10"
-          // _password="true"
-          // _minlength="3"
-          // _maxlength="5"
-          // _length="6"
-          // _email="true"
-          // _amount="true"
-          // _pan="true"
-          // _panbasic="true"
-          // _pin="true"
-          // defaultValue={'default 1'}
-        />
-        {errorState?.front}
-        <input
-          name="back"
-          _required="true"
-          // _number="true"
-          // _min="5"
-          // _max="10"
-          // _passwordrepeat="true"
-          // _minlength="3"
-          // _maxlength="5"
-          // _length="6"
-          // _email="true"
-          // _amount="true"
-          // _pan="true"
-          // _pin="true"
-          // defaultValue={'default 1'}
-        />
-        {errorState?.back}
-
-        <button type="submit">submit</button>
-      </form>
-    </div>
-  );
+                <button type="submit">submit</button>
+            </form>
+        </div>
+    );
 }

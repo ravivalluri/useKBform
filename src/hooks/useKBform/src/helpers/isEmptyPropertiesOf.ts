@@ -1,4 +1,4 @@
-import utils from '../utils/utils';
+import utils from '../utils';
 
 /* returns true if each property in object is empty */
 export default function isEmptyPropertiesOf (obj: any): any {
