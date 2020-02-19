@@ -4,7 +4,11 @@ import Input from './Input';
 
 /* example usage of useKBform() with single form or multiple step by step validation  */
 export default function ExampleComponent (): React.ReactElement {
-    const { _register, _handleSubmit, watchState, formState, errorState, formStatus } = useKBform();
+    const { _register, _envMode, _handleSubmit, watchState, formState, errorState, formStatus } = useKBform();
+
+    useEffect(() => {
+        _envMode('dev');
+    }, []);
 
     useEffect(() => {
         /* temp condition */
