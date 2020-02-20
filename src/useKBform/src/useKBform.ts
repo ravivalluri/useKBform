@@ -46,7 +46,7 @@ export default function useKBform(): IUseKBform {
     const [formStatus, setFormStatus] = useState<IFormStatus>();
 
     /* env mode  { 'dev' || 'prod' }*/
-    const [envMode, setEnvMode] = useState<string>();
+    const [envMode, setEnvMode] = useState<string>('prod');
 
     /* init refs array */
     const { current } = useRef<ICurrent[]>([]);
@@ -62,23 +62,22 @@ export default function useKBform(): IUseKBform {
         return currentFormEl?.nodeName === nodeName;
     }, []);
 
-    const createDirtyFormObjectsArr = useCallback(() => {
+    const createFormObjectsArr = useCallback(() => {
         const formObjectsArr = [];
-
-        for (let form = 0; form < current.length; form++) {
-            for (let el = 0; el < current[form]?.length; el++) {
-                if (filterByNodeName(current[form][el], 'INPUT')) {
-                    formObjectsArr.push({ [current[form].attributes._formname.value]: current[form][el] });
+        current.forEach(form => {
+            [...form.elements].forEach(el => {
+                if (filterByNodeName(el, 'INPUT')) {
+                    formObjectsArr.push({ [form.attributes._formname.value]: el });
                 }
-            }
-        }
+            });
+        });
 
         return formObjectsArr;
-    }, []);
+    }, [filterByNodeName]);
 
     /* helper function to create form objects with the value of  { [name] : value } input */
-    const createCleanFormObjectsArr = useCallback(() => {
-        const formState = createDirtyFormObjectsArr().reduce((acc: ICurrent, currentForm: ICurrent) => {
+    const createSortedFormObjectsArr = useCallback(() => {
+        const sortedFormState = createFormObjectsArr().reduce((acc: ICurrent, currentForm: ICurrent) => {
             for (const formName in currentForm) {
                 if (!acc[formName]) {
                     acc[formName] = [];
@@ -89,8 +88,8 @@ export default function useKBform(): IUseKBform {
             return acc;
         }, {});
 
-        return formState;
-    }, [createDirtyFormObjectsArr]);
+        return sortedFormState;
+    }, [createFormObjectsArr]);
 
     const onClick = useCallback(
         (form: ICurrent) => {
@@ -120,31 +119,32 @@ export default function useKBform(): IUseKBform {
 
     /* enable watchMode only if envMode setted to 'dev' , you can use watch mode to track form state changes while debugging*/
     useEffect(() => {
-        for (let form = 0; form < current.length; form++) {
-            for (let el = 0; el < current[form]?.length; el++) {
-                if (filterByNodeName(current[form][el], 'INPUT') && envMode === 'dev') {
-                    current[form][el].onchange = () => setWatchState(createCleanFormObjectsArr());
+        current.forEach(form => {
+            [...form.elements].forEach(el => {
+                if (filterByNodeName(el, 'INPUT') && envMode === 'dev') {
+                    el.onchange = () => setWatchState(createSortedFormObjectsArr());
                 }
-            }
-        }
+            });
+        });
     }, [envMode]);
 
     const _register = useCallback(
         (formRef: ICurrent) => {
             current.push(formRef);
 
-            for (let form = 0; form < current.length; form++) {
-                for (let el = 0; el < current[form]?.length; el++) {
-                    if (filterByNodeName(current[form][el], 'BUTTON')) {
-                        current[form][el].onclick = () => onClick(current[form]);
+            current.forEach(form => {
+                [...form.elements].forEach(el => {
+                    if (filterByNodeName(el, 'BUTTON')) {
+                        el.onclick = () => onClick(form);
                     }
 
-                    if (filterByNodeName(current[form][el], 'INPUT')) {
-                        current[form][el].onkeydown = (event: IHTMLInputEvent) => onKeyDown(event, current[form][el]);
+                    if (filterByNodeName(el, 'INPUT')) {
+                        el.onkeydown = (event: IHTMLInputEvent) => onKeyDown(event, el);
                     }
-                }
-                current[form].onsubmit = (event: IHTMLInputEvent) => event.preventDefault();
-            }
+                });
+
+                form.onsubmit = (event: IHTMLInputEvent) => event.preventDefault();
+            });
         },
         [filterByNodeName, onKeyDown, onClick],
     );
@@ -155,10 +155,10 @@ export default function useKBform(): IUseKBform {
             event.preventDefault();
 
             if (isEmptyPropertiesOf(errorState)) {
-                setFormState(createCleanFormObjectsArr());
+                setFormState(createSortedFormObjectsArr());
             }
         },
-        [setFormState, errorState, createCleanFormObjectsArr],
+        [setFormState, errorState, createSortedFormObjectsArr],
     );
 
     /* set env mode */
