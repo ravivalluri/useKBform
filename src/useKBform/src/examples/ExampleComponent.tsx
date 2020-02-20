@@ -1,36 +1,54 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState, SuspenseProps, SyntheticEvent } from 'react';
 import useKBform from '../useKBform';
 import Input from './Input';
 
 /* example usage of useKBform() with single form or multiple step by step validation  */
 export default function ExampleComponent(): React.ReactElement {
-  const { _register, _handleSubmit, watchState, formState, errorState, formStatus } = useKBform();
+  const { _register, _envMode, _handleSubmit, watchState, formState, errorState, formStatus } = useKBform();
 
   useEffect(() => {
-    /* temp condition */
-    if (formState) {
-      console.log(formState);
-    }
-  }, [formState]);
+    // _envMode('dev');
+  }, []);
 
-  /* watch state */
-  useEffect(() => {
-    console.log(watchState);
-  }, [watchState]);
+  // useEffect(() => {
+  //     /* temp condition */
+  //     if (formState) {
+  //         console.log(formState);
+  //     }
+  // }, [formState]);
 
-  /* status of first form by name "firstform */
-  useEffect(() => {
-    if (formStatus?.firstform) {
-      console.log('first form is clean', formStatus);
-    }
-  }, [formStatus]);
+  // /* watch state */
+  // useEffect(() => {
+  //     console.log(watchState);
+  // }, [watchState]);
 
-  /* status of second form by name "secondform" */
-  useEffect(() => {
-    if (formStatus?.secondform) {
-      console.log('second form is clean', formStatus);
-    }
-  }, [formStatus]);
+  // /* status of first form by name "firstform */
+  // useEffect(() => {
+  //     if (formStatus?.firstform) {
+  //         console.log('first form is clean', formStatus);
+  //     }
+  // }, [formStatus]);
+
+  // /* status of second form by name "secondform" */
+  // useEffect(() => {
+  //     if (formStatus?.secondform) {
+  //         console.log('second form is clean', formStatus);
+  //     }
+  // }, [formStatus]);
+
+  /* this code does not work correctly*/
+  // const handleSubmit = (e: SyntheticEvent) => {
+  //     _handleSubmit(e);
+  //     console.log('formStatus', formStatus);
+
+  //     if (formStatus?.firstform) {
+  //         console.log('formState', formState);
+  //     }
+
+  //     if (formStatus?.secondform) {
+  //         console.log('formState', formState);
+  //     }
+  // };
 
   return (
     <div>
