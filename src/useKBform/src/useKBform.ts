@@ -67,7 +67,7 @@ export default function useKBform(): IUseKBform {
   }, []);
 
   const createDirtyFormObjectsArr = useCallback(() => {
-    const formObjectsArr = [];
+    const formObjectsArr = [] as any;
 
     for (let form = 0; form < current.length; form++) {
       for (let el = 0; el < current[form]?.length; el++) {
