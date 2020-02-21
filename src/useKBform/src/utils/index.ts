@@ -8,7 +8,7 @@ function Utils (): void {
 
 /* method to check that provided value is number */
 Utils.prototype.isNumber = function (num: string): boolean {
-    const regex = /^\d+$/;
+    const regex = /^[+-]?\d+(\.\d+)?$/;
     return regex.test(String(num.trim()));
 };
 
