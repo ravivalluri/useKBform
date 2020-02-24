@@ -2,7 +2,7 @@ import { IError, IInputElement } from '../models';
 import utils from '../utils';
 
 /* core validate ctor function */
-export default function Validate(this: any, array: IInputElement[]): void {
+export default function Validate (this: any, array: IInputElement[]): void {
     this.array = array;
 }
 
@@ -12,12 +12,12 @@ export default function Validate(this: any, array: IInputElement[]): void {
 // };
 
 /* returns array of inputs with given attribute */
-Validate.prototype.hasAttribute = function(attr: string): IInputElement[] {
+Validate.prototype.hasAttribute = function (attr: string): IInputElement[] {
     return this.array?.filter((x: IInputElement) => x.attributes.hasOwnProperty(attr));
 };
 
 /* method for validating form */
-Validate.prototype.validate = function(): IError {
+Validate.prototype.validate = function (): IError {
     const errors = {} as IError;
 
     this.hasAttribute('_required')?.forEach(({ name, value }: IInputElement): void => {
@@ -74,13 +74,13 @@ Validate.prototype.validate = function(): IError {
         }
     });
 
-    // this.hasAttribute('_length')?.forEach(({ name, value, attributes }: IInputElement): void => {
-    //     if (!utils.isEmpty(value)) {
-    //         if (value.length !== parseInt(attributes._length.value, 10)) {
-    //             errors[name] = `required length is ${attributes._length.value} `;
-    //         }
-    //     }
-    // });
+    this.hasAttribute('_length')?.forEach(({ name, value, attributes }: IInputElement): void => {
+        if (!utils.isEmpty(value)) {
+            if (value.length !== parseInt(attributes._length.value, 10)) {
+                errors[name] = `required length is ${attributes._length.value} `;
+            }
+        }
+    });
 
     this.hasAttribute('_pin')?.forEach(({ name, value }: IInputElement): void => {
         if (!utils.isEmpty(value)) {
@@ -118,6 +118,15 @@ Validate.prototype.validate = function(): IError {
         if (!utils.isEmpty(value)) {
             if (!utils.isValidPhone(value)) {
                 errors[name] = 'this phone number is not valid';
+            }
+        }
+    });
+
+    this.hasAttribute('_customregex')?.forEach(({ name, value, attributes }: any): void => {
+        if (!utils.isEmpty(value)) {
+            const regex = RegExp(attributes._customregex.value);
+            if (!regex.test(String(value.trim()))) {
+                errors[name] = 'this value does not match provided regex';
             }
         }
     });

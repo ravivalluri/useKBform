@@ -36,6 +36,7 @@ interface IInputAttributes extends NamedNodeMap {
     _panbasic?: ICustomAttribute;
     _pin?: ICustomAttribute;
     _formname?: string;
+    _customregex?: string;
 }
 
 export interface IFormData {
@@ -70,6 +71,7 @@ export interface IInputProps {
     _panbasic?: string;
     _pin?: string;
     _formname?: string;
+    _customregex?: string;
 }
 
 export interface IFormStatus {

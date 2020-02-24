@@ -7,7 +7,7 @@
 /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */ /*  */
 
 import { SyntheticEvent, useCallback, useEffect, useRef, useState } from 'react';
-import isEmptyPropertiesOf from './helpers/isEmptyPropertiesOf';
+import hasEmptyProperties from './helpers/hasEmptyProperties';
 import { ICurrent, IFormData, IFormStatus, IHTMLInputEvent, IUseKBform } from './models';
 import utils from './utils';
 import Validate from './validate/core';
@@ -30,6 +30,7 @@ declare module 'react' {
         _panbasic?: string;
         _pin?: string;
         _formname?: string;
+        _customregex?: string;
     }
 }
 
@@ -53,36 +54,27 @@ export default function useKBform(): IUseKBform {
     const { current } = useRef<ICurrent[]>([]);
 
     /* get existing errors */
-    const existingErrorsOf = useCallback(formInstance => formInstance.validate(), []);
+    const existingErrors = useCallback(formInstance => formInstance.validate(), []);
 
-    /* helper function to find refs array by node name */
-    const filterRefsFrom = useCallback((refs: any, nodeName: string) => [...refs].filter((item: any) => item.nodeName === nodeName), []);
-
-    /* helper function to filter elements by node name */
-    const filterByNodeName = useCallback((currentFormEl: ICurrent, nodeName: string) => {
-        return currentFormEl?.nodeName === nodeName;
-    }, []);
+    /* helper function to find refs array which does not match given node name */
+    const filterRefsExcept = useCallback((refs: any, nodeName: string) => [...refs].filter((item: any) => item.nodeName !== nodeName), []);
 
     // useEffect(() => {
     //     console.log(errorState);
     // }, [errorState]);
 
-    // const filterFormElement = el => {
-    //     return filterByNodeName(el, 'INPUT');
-    // };
-
     const createFormObjects = useCallback(() => {
         const formInputs = [];
         current.forEach(form => {
             [...form.elements].forEach(el => {
-                if (filterByNodeName(el, 'INPUT')) {
+                if (el.nodeName !== 'BUTTON') {
                     formInputs.push({ [form.attributes._formname.value]: el });
                 }
             });
         });
 
         return formInputs;
-    }, [filterByNodeName]);
+    }, []);
 
     /* helper function to create form objects with the value of  { [name] : value } input */
     const createSortedFormObjects = useCallback(() => {
@@ -102,44 +94,43 @@ export default function useKBform(): IUseKBform {
 
     const onClick = useCallback(
         (form: ICurrent) => {
-            const formInstance = new (Validate as any)(filterRefsFrom(form, 'INPUT'));
-            setErrorState(existingErrorsOf(formInstance));
+            const formInstance = new (Validate as any)(filterRefsExcept(form, 'BUTTON'));
+            setErrorState(existingErrors(formInstance));
 
-            if (isEmptyPropertiesOf(existingErrorsOf(formInstance))) {
+            if (hasEmptyProperties(existingErrors(formInstance))) {
                 setFormStatus({ [form.attributes._formname.value]: 'success' });
             }
         },
-        [filterRefsFrom, setErrorState, existingErrorsOf, setFormStatus],
+        [filterRefsExcept, setErrorState, existingErrors, setFormStatus],
     );
 
     /* TODO refactor */
     /* prevent user actions on keydown*/
     const onKeyDown = useCallback((event: any, currentFormEl: ICurrent) => {
-        const bannedKeyCodes = event.keyCode !== 8 && event.keyCode !== 190 && event.keyCode !== 46;
+        const allowedKeyCodes = event.keyCode !== 8 && event.keyCode !== 190 && event.keyCode !== 46;
         const numVal = currentFormEl.attributes?._number?.value;
         const lengthVal = currentFormEl.attributes?._length?.value;
 
         if (numVal && lengthVal) {
             if (parseInt(lengthVal, 10) === currentFormEl.value?.length) {
-                if (bannedKeyCodes) {
+                if (allowedKeyCodes) {
                     return event.preventDefault();
                 }
             }
 
-            if (bannedKeyCodes) {
+            if (allowedKeyCodes) {
                 return utils.isNumberEvent(event);
             }
         }
 
         if (numVal) {
-            if (bannedKeyCodes) {
+            if (allowedKeyCodes) {
                 return utils.isNumberEvent(event);
             }
         }
 
         if (parseInt(lengthVal, 10) === currentFormEl.value?.length) {
-            console.log('length');
-            if (bannedKeyCodes) {
+            if (allowedKeyCodes) {
                 return event.preventDefault();
             }
         }
@@ -149,11 +140,7 @@ export default function useKBform(): IUseKBform {
     useEffect(() => {
         if (envMode === 'dev') {
             current.forEach(form => {
-                [...form.elements].forEach(el => {
-                    if (filterByNodeName(el, 'INPUT')) {
-                        el.onchange = () => setWatchState(createSortedFormObjects());
-                    }
-                });
+                [...form.elements].forEach(el => (el.onkeyup = () => setWatchState(createSortedFormObjects())));
             });
         }
     }, [envMode]);
@@ -161,14 +148,15 @@ export default function useKBform(): IUseKBform {
     const _register = useCallback(
         (formRef: ICurrent) => {
             current.push(formRef);
+            console.log(current);
 
             current.forEach(form => {
                 [...form.elements].forEach(el => {
-                    if (filterByNodeName(el, 'BUTTON')) {
+                    if (el.nodeName === 'BUTTON') {
                         el.onclick = () => onClick(form);
                     }
 
-                    if (filterByNodeName(el, 'INPUT')) {
+                    if (el.nodeName !== 'BUTTON') {
                         el.onkeydown = (event: IHTMLInputEvent) => onKeyDown(event, el);
                     }
                 });
@@ -176,7 +164,7 @@ export default function useKBform(): IUseKBform {
                 form.onsubmit = (event: IHTMLInputEvent) => event.preventDefault();
             });
         },
-        [filterByNodeName, onKeyDown, onClick],
+        [onKeyDown, onClick],
     );
 
     /* submit function */
@@ -184,7 +172,7 @@ export default function useKBform(): IUseKBform {
         (event: SyntheticEvent) => {
             event.preventDefault();
 
-            if (isEmptyPropertiesOf(errorState)) {
+            if (hasEmptyProperties(errorState)) {
                 setFormState(createSortedFormObjects());
             }
         },
