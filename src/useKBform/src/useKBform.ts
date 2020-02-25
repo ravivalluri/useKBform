@@ -59,9 +59,9 @@ export default function useKBform(): IUseKBform {
     /* helper function to find refs array which does not match given node name */
     const filterRefsExcept = useCallback((refs: any, nodeName: string) => [...refs].filter((item: any) => item.nodeName !== nodeName), []);
 
-    // useEffect(() => {
-    //     console.log(errorState);
-    // }, [errorState]);
+    useEffect(() => {
+        console.log(current);
+    }, []);
 
     const createFormObjects = useCallback(() => {
         const formInputs = [];
@@ -84,7 +84,11 @@ export default function useKBform(): IUseKBform {
                     acc[formName] = [];
                 }
 
-                acc[formName].push({ [currentForm[formName].name]: currentForm[formName].value });
+                if (currentForm[formName].files) {
+                    acc[formName].push({ [currentForm[formName].name]: currentForm[formName].files });
+                } else {
+                    acc[formName].push({ [currentForm[formName].name]: currentForm[formName].value });
+                }
             }
             return acc;
         }, {});
@@ -139,20 +143,17 @@ export default function useKBform(): IUseKBform {
     /* enable watchMode only if envMode setted to 'dev' , you can use watch mode to track form state changes while debugging*/
     useEffect(() => {
         if (envMode === 'dev') {
-            current.forEach(form => {
-                [...form.elements].forEach(el => (el.onkeyup = () => setWatchState(createSortedFormObjects())));
-            });
+            current.forEach(form => [...form.elements].forEach(el => (el.onkeyup = () => setWatchState(createSortedFormObjects()))));
         }
     }, [envMode]);
 
     const _register = useCallback(
         (formRef: ICurrent) => {
             current.push(formRef);
-            console.log(current);
 
             current.forEach(form => {
                 [...form.elements].forEach(el => {
-                    if (el.nodeName === 'BUTTON') {
+                    if (el.nodeName === 'BUTTON' && el.type === 'submit') {
                         el.onclick = () => onClick(form);
                     }
 
@@ -182,5 +183,18 @@ export default function useKBform(): IUseKBform {
     /* set env mode */
     const _envMode = useCallback((mode: string) => setEnvMode(mode), [setEnvMode]);
 
-    return { _register, watchState, formState, errorState, formStatus, _handleSubmit, _envMode };
+    /* ability ro reset all form element's value by _formname */
+    const _reset = useCallback((formName: string) => {
+        current.forEach(form => {
+            if (form.attributes._formname.value === formName) {
+                [...form.elements].forEach(el => {
+                    if (el.nodeName !== 'BUTTON') {
+                        el.value = '';
+                    }
+                });
+            }
+        });
+    }, []);
+
+    return { _register, watchState, formState, errorState, formStatus, _handleSubmit, _envMode, _reset };
 }

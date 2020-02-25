@@ -82,6 +82,7 @@ export interface IUseKBform {
     _register (ref: any): void;
     _handleSubmit (event: SyntheticEvent): void;
     _envMode (mode: string): void;
+    _reset (formName: string): void;
     watchState?: IFormData[];
     formState?: IFormData[];
     formStatus?: IFormStatus;
