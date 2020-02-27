@@ -42,11 +42,11 @@ export default function ExampleComponent(): ReactElement {
   return (
     <div>
       <form ref={_register} _formname="firstform" onSubmit={_handleSubmit}>
-        <Input errorstate={errorState} name="name" _required="true" />
-        {/* <Input errorstate={errorState} name="surname" _min="5" _max="10" _number="true" /> */}
+        <Input errorstate={errorState} name="name" />
+        <Input errorstate={errorState} name="surname" _number="true" />
 
-        {/* <input name="amount" />
-                {errorState.amount} */}
+        <input name="amount" value={'true'} />
+        {errorState.amount}
 
         {/* <textarea name="poem" _required="true" />
                 {errorState.poem} */}
@@ -77,9 +77,9 @@ export default function ExampleComponent(): ReactElement {
         reset firstform
       </button>
 
-      <button type="button" onClick={() => _reset('secondform')}>
+      {/* <button type="button" onClick={() => _reset('secondform')}>
         reset secondform
-      </button>
+      </button> */}
     </div>
   );
 }

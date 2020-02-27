@@ -87,12 +87,19 @@ export default function useKBform(): IUseKBform {
           acc[formName] = [];
         }
 
-        if (currentForm[formName].files) {
-          acc[formName].push({ [currentForm[formName].name]: currentForm[formName].files });
+        const { value, files, name } = currentForm[formName];
+
+        if (files) {
+          acc[formName].push({ [name]: files });
+        } else if (value === 'true' || value === 'false') {
+          acc[formName].push({ [name]: JSON.parse(value) });
+        } else if (utils.isNumber(value)) {
+          acc[formName].push({ [name]: parseFloat(value) });
         } else {
-          acc[formName].push({ [currentForm[formName].name]: currentForm[formName].value });
+          acc[formName].push({ [name]: value });
         }
       }
+
       return acc;
     }, {});
 
