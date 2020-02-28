@@ -31,6 +31,8 @@ declare module 'react' {
         _pin?: string;
         _formname?: string;
         _customregex?: string;
+        _resetbtn?: string;
+        _ignore?: string;
     }
 }
 
@@ -57,7 +59,7 @@ export default function useKBform(): IUseKBform {
     const existingErrors = useCallback(formInstance => formInstance.validate(), []);
 
     /* helper function to find refs array which does not match given node name */
-    const filterRefsExcept = useCallback((refs: any, nodeName: string) => [...refs].filter((item: any) => item.nodeName !== nodeName), []);
+    const filterRefsExcept = useCallback((refs: any, nodeName: string) => [...refs].filter(({ nodeName }: any) => nodeName !== nodeName), []);
 
     useEffect(() => {
         console.log(current);
@@ -65,10 +67,10 @@ export default function useKBform(): IUseKBform {
 
     const createFormObjects = useCallback(() => {
         const formInputs = [];
-        current.forEach(form => {
-            [...form.elements].forEach(el => {
-                if (el.nodeName !== 'BUTTON') {
-                    formInputs.push({ [form.attributes._formname.value]: el });
+        current.forEach(({ elements, attributes }) => {
+            [...elements].forEach(el => {
+                if (el.nodeName !== 'BUTTON' && !el.attributes._ignore) {
+                    formInputs.push({ [attributes._formname.value]: el });
                 }
             });
         });
@@ -84,10 +86,17 @@ export default function useKBform(): IUseKBform {
                     acc[formName] = [];
                 }
 
-                if (currentForm[formName].files) {
-                    acc[formName].push({ [currentForm[formName].name]: currentForm[formName].files });
+                /* TODO refactor this if else shit :)) */
+                const { value, files, name } = currentForm[formName];
+
+                if (files) {
+                    acc[formName].push({ [name]: files });
+                } else if (value === 'true' || value === 'false') {
+                    acc[formName].push({ [name]: JSON.parse(value) });
+                } else if (utils.isNumber(value)) {
+                    acc[formName].push({ [name]: parseFloat(value) });
                 } else {
-                    acc[formName].push({ [currentForm[formName].name]: currentForm[formName].value });
+                    acc[formName].push({ [name]: value });
                 }
             }
             return acc;
@@ -108,18 +117,16 @@ export default function useKBform(): IUseKBform {
         [filterRefsExcept, setErrorState, existingErrors, setFormStatus],
     );
 
-    /* TODO refactor */
     /* prevent user actions on keydown*/
     const onKeyDown = useCallback((event: any, currentFormEl: ICurrent) => {
         const allowedKeyCodes = event.keyCode !== 8 && event.keyCode !== 190 && event.keyCode !== 46;
         const numVal = currentFormEl.attributes?._number?.value;
         const lengthVal = currentFormEl.attributes?._length?.value;
 
+        /* TODO refactor this if else shit)) */
         if (numVal && lengthVal) {
             if (parseInt(lengthVal, 10) === currentFormEl.value?.length) {
-                if (allowedKeyCodes) {
-                    return event.preventDefault();
-                }
+                return allowedKeyCodes && event.preventDefault();
             }
 
             if (allowedKeyCodes) {
@@ -134,19 +141,18 @@ export default function useKBform(): IUseKBform {
         }
 
         if (parseInt(lengthVal, 10) === currentFormEl.value?.length) {
-            if (allowedKeyCodes) {
-                return event.preventDefault();
-            }
+            return allowedKeyCodes && event.preventDefault();
         }
     }, []);
 
     /* enable watchMode only if envMode setted to 'dev' , you can use watch mode to track form state changes while debugging*/
     useEffect(() => {
         if (envMode === 'dev') {
-            current.forEach(form => [...form.elements].forEach(el => (el.onkeyup = () => setWatchState(createSortedFormObjects()))));
+            current.forEach(({ elements }) => [...elements].forEach(el => (el.onkeyup = () => setWatchState(createSortedFormObjects()))));
         }
     }, [envMode]);
 
+    /* function to register all forms */
     const _register = useCallback(
         (formRef: ICurrent) => {
             current.push(formRef);
@@ -173,6 +179,8 @@ export default function useKBform(): IUseKBform {
         (event: SyntheticEvent) => {
             event.preventDefault();
 
+            console.log(current);
+
             if (hasEmptyProperties(errorState)) {
                 setFormState(createSortedFormObjects());
             }
@@ -185,11 +193,15 @@ export default function useKBform(): IUseKBform {
 
     /* ability ro reset all form element's value by _formname */
     const _reset = useCallback((formName: string) => {
-        current.forEach(form => {
-            if (form.attributes._formname.value === formName) {
-                [...form.elements].forEach(el => {
+        current.forEach(({ attributes, elements }) => {
+            if (attributes._formname.value === formName) {
+                [...elements].forEach(el => {
                     if (el.nodeName !== 'BUTTON') {
                         el.value = '';
+                    }
+
+                    if (el.attributes._resetbtn) {
+                        el.click();
                     }
                 });
             }

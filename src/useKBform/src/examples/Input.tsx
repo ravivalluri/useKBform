@@ -1,13 +1,13 @@
-import React, { forwardRef, LegacyRef, ReactElement } from 'react';
+import React, { Ref, ReactElement } from 'react';
 import { IInputProps } from '../models';
 
-export default forwardRef(function(props: IInputProps, ref: LegacyRef<HTMLInputElement>): ReactElement {
+export default function(props: IInputProps): ReactElement {
     const { errorstate, name } = props;
 
     return (
         <>
-            <input {...props} {...{ ref }} />
+            <input {...props} />
             {errorstate[name]}
         </>
     );
-});
+}
